@@ -1,0 +1,12 @@
+{% load render_bundle from webpack_loader %}
+{% load static %}
+<!doctype html>
+<html>
+<head>
+    <title>Dashboard</title>
+    </head>
+    <body class="app header-fixed sidebar-fixed aside-menu-fixed aside-menu-hidden">
+        <div id="root"></div>
+        {% render_bundle 'index' %}
+    </body>
+</html>

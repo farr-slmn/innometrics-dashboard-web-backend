@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'webpack_loader',
     'dash',
     'dash.contrib.layouts.android',
     'dash.contrib.layouts.bootstrap2',
@@ -138,6 +139,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': '',
+        'STATS_FILE': os.path.join(BASE_DIR, 'frontend/webpack-stats.json'),
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -156,12 +163,13 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'staticfiles'),  # project-wide static files
+    os.path.join(BASE_DIR, 'frontend/build'),
 )
 STATIC_ROOT = './static/'
 STATIC_URL = '/static/'
 
 
-LOGIN_REDIRECT_URL = '/activities/'
+LOGIN_REDIRECT_URL = '/dash_react/'
 
 # Uncomment when deploying in heroku
 # import dj_database_url

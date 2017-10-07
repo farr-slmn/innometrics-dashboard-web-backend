@@ -1,5 +1,6 @@
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.views.generic import TemplateView
 
 from activities import views
 from rest_framework.authtoken import views as rest_views
@@ -35,5 +36,6 @@ urlpatterns = [
 
     # for dashboards:
     url(r'^dashboard/', include('dash.urls')),
+    url(r'^dash_react/', TemplateView.as_view(template_name="dash_react.html")),
     url(r'^', include('dash.contrib.apps.public_dashboard.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
