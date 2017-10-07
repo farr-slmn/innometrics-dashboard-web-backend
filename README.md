@@ -9,5 +9,8 @@ Visualisation + storage for some abstract activities + rest API for the data-del
 3. pip
 
 ## Installation:
-pip install -r requirements;
+pip install -r requirements.txt;
 python manage.py syncdb;
+cd frontend
+npm install
+./node_modules/.bin/webpack -d

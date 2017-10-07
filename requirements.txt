@@ -5,3 +5,4 @@ dj-database-url
 gunicorn
 coreapi
 django-dash
+django-webpack-loader
