@@ -4,11 +4,23 @@ from rest_framework.authtoken.models import Token
 from django.db.models.signals import post_save
 from django.conf import settings
 
+from projects.models import UserParticipation
+
+
+class Group(models.Model):
+    name = models.TextField(max_length=150, blank=True)
+    participation = models.ForeignKey(UserParticipation, blank=True, null=True)
+
+
+class Entity(models.Model):
+    name = models.TextField(max_length=120, blank=True)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, blank=True, null=True)
+
 
 class Activity(models.Model):
-    name = models.CharField(max_length=255)
     comments = models.CharField(max_length=255, blank=True)
-    user = models.ForeignKey('auth.User', related_name='activities', on_delete=models.CASCADE)
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, blank=True, null=True)
+    participation = models.ForeignKey(UserParticipation, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         super(Activity, self).save(*args, **kwargs)

@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     'activities.apps.ActivitiesConfig',
     'measurements.apps.MeasurementsConfig',
+    'projects.apps.ProjectsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -98,8 +99,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'innometrics',
-        'USER': 'admin',
-        'PASSWORD': 'masterkey',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
