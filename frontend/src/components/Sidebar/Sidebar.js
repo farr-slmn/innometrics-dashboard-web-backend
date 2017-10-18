@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import {NavLink} from 'react-router-dom';
 import {Badge, Nav, NavItem} from 'reactstrap';
 import classNames from 'classnames';
-import nav from './_nav'
 
 class Sidebar extends Component {
 
@@ -89,7 +88,7 @@ class Sidebar extends Component {
       <div className="sidebar">
         <nav className="sidebar-nav">
           <Nav>
-            {navList(nav.items)}
+            {navList(props.items)}
           </Nav>
         </nav>
       </div>

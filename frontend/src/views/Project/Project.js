@@ -30,6 +30,11 @@ const data = {
 };
 
 class Project extends Component {
+  constructor(props) {
+      super(props);
+      this.id = props.id;
+      this.name = props.name;
+  }
 
   render() {
       const pr_bar_style = {
