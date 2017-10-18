@@ -46,7 +46,7 @@ class Full extends Component {
 
       this.default_project = 1;
       this.projects = test_projects.map((project, idx) => (
-        <Project id={project.id} name={project.name}/>
+        <Project proj={project}/>
       ));
   }
 
@@ -62,8 +62,8 @@ class Full extends Component {
             {/*<Breadcrumb />*/}
             <Container fluid>
               {this.projects.map((project, idx) => (
-                <Switch key={project.props.id}>
-                  <Route path={"/project/" + project.props.id}  name={project.props.name}>
+                <Switch key={project.props.proj.id}>
+                  <Route path={"/project/" + project.props.proj.id}  name={project.props.proj.name}>
                     {project}
                   </Route>
                 </Switch>
