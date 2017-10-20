@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 
-from activities.models import Activity
+from activities.models import Activity, Entity
 from activities.serializers import ActivitySerializer, UserSerializer
+from projects.models import UserParticipation
 
 
 class DownloadList(APIView):
@@ -77,7 +78,13 @@ class ActivityList(APIView):
         serializers = []
         brokenSerializers = []
         for data in request.data['activities']:
-            data['user'] = request.user.id
+            user = request.user
+            participation, created = UserParticipation.objects.get_or_create(user=user, project=None)
+            participation.save()
+            entity, created = Entity.objects.get_or_create(name=data['name'])
+            entity.save()
+            data['participation'] = participation.id
+            data['entity'] = entity.id
             serializer = ActivitySerializer(data=data)
             noErrors = noErrors and serializer.is_valid()
             if serializer.is_valid():

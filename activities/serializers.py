@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 
 from activities.models import Activity
 from measurements.models import Measurement
 from measurements.serializers import MeasurementSaveSerializer
-
-from rest_framework import serializers
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -33,7 +32,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Activity
-        fields = ('id', 'name', 'comments', 'measurements', 'user')
+        fields = ('id', 'comments', 'measurements', 'participation', 'entity')
 
     def create(self, validated_data):
         measurements_data = validated_data.pop('measurements')
