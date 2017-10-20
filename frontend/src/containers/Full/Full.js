@@ -18,16 +18,62 @@ class Full extends Component {
             id: 0,
             name: "Project 0",
             warnings: 0,
+            participants: [
+                {
+                    id: 0,
+                    fullName: "User 1",
+                    role: "Developer"
+                },
+                {
+                    id: 1,
+                    fullName: "User 2",
+                    role: "Developer"
+                },
+                {
+                    id: 3,
+                    fullName: "User 3",
+                    role: "Project Manager"
+                },
+            ],
         },
         {
             id: 1,
             name: "Project 1",
             warnings: 0,
+            participants: [
+                {
+                    id: 0,
+                    fullName: "User 1",
+                    role: "Developer"
+                },
+                {
+                    id: 1,
+                    fullName: "User 2",
+                    role: "QA"
+                },
+                {
+                    id: 3,
+                    fullName: "User 3",
+                    role: "Project Manager"
+                },
+            ],
         },
         {
             id: 2,
             name: "Project 2",
             warnings: 3,
+            participants: [
+                {
+                    id: 0,
+                    fullName: "User 1",
+                    role: "Developer"
+                },
+                {
+                    id: 3,
+                    fullName: "User 3",
+                    role: "Project Manager"
+                },
+            ],
         }
       ];
 

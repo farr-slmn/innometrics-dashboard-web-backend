@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import DashboardItem from '../DashboardItem/DashboardItem';
+import Members from '../Members/Members'
 import { Line } from 'react-chartjs-2';
 import {Link, NavLink, Redirect, Route, Switch} from "react-router-dom";
 
@@ -48,7 +49,7 @@ class Project extends Component {
                     <NavLink to={"/project/" + this.proj.id + "/general/"} className="nav-link" activeClassName="active">General</NavLink>
                 </li>
                 <li className="nav-item">
-                    <a className="nav-link" href="#">Development</a>
+                    <NavLink to={"/project/" + this.proj.id + "/members/"} className="nav-link" activeClassName="active">Project members</NavLink>
                 </li>
                 <li className="nav-item">
                     <a className="nav-link" href="#">Testing</a>
@@ -61,7 +62,7 @@ class Project extends Component {
                 </li>
             </ul>
             <Switch>
-                <Redirect from="/" to={this.proj.id + "/general/"}/>
+                <Redirect from={"/project/" + this.proj.id} to={"/project/" + this.proj.id + "/general/"}/>
             </Switch>
             <Switch>
                 <Route path={"/project/" + this.proj.id + "/preferences/"}>
@@ -73,6 +74,11 @@ class Project extends Component {
                             Warnings: {this.proj.warnings}
                         </div>
                     </div>
+                </Route>
+            </Switch>
+            <Switch>
+                <Route path={"/project/" + this.proj.id + "/members/"}>
+                    <Members participants={this.proj.participants}/>
                 </Route>
             </Switch>
             <Switch>
