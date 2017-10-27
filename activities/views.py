@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 
 from activities.models import Activity, Entity
-from activities.serializers import ActivitySerializer, UserSerializer
+from activities.serializers import ActivitySerializer, UserSerializer, EntitySerializer
 from projects.models import UserParticipation
 
 
@@ -60,7 +60,9 @@ class ActivityList(APIView):
     page_size = 20
 
     def get(self, request, format=None):
-        activities = Activity.objects.filter(user=request.user.id)
+        project_id = request.data["project_id"] if "project_id" in request.data else None
+        participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
+        activities = Activity.objects.filter(participation=participation)
         paginator = Paginator(activities, self.page_size)
         page = request.GET.get('page')
         try:

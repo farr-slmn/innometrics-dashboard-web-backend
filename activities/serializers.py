@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from activities.models import Activity
+from activities.models import Activity, Entity
 from measurements.models import Measurement
 from measurements.serializers import MeasurementSaveSerializer
 
@@ -39,4 +39,14 @@ class ActivitySerializer(serializers.ModelSerializer):
         activity = Activity.objects.create(**validated_data)
         for measurement_data in measurements_data:
             Measurement.objects.create(activity=activity, **measurement_data)
+        return activity
+
+
+class EntitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Entity
+        fields = ('id', 'name', 'group')
+
+    def create(self, validated_data):
+        activity = Activity.objects.create(**validated_data)
         return activity
