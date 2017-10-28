@@ -99,8 +99,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'innometrics',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
+        'USER': 'admin',
+        'PASSWORD': 'masterkey',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
