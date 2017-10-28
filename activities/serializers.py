@@ -4,18 +4,15 @@ from rest_framework import serializers
 from activities.models import Activity, Entity
 from measurements.models import Measurement
 from measurements.serializers import MeasurementSaveSerializer
+from projects.models import UserParticipation
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    activities = serializers.PrimaryKeyRelatedField(
-        read_only=True,
-        many=True
-    )
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'password', 'email', 'activities')
+        fields = ('id', 'username', 'password', 'email')
 
     def create(self, validated_data):
         user = get_user_model().objects.create(
