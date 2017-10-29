@@ -11,7 +11,7 @@ class MeasurementsList(APIView):
     """
 
     def get(self, request, format=None):
-        measurements = Measurement.objects.filter(activity__user=request.user.id)
+        measurements = Measurement.objects.filter(activity__participation__user=request.user.id)
         serializer = MeasurementSerializer(measurements, many=True)
         resp = {'measurements': (serializer.data)}
         return JsonResponse(resp)
