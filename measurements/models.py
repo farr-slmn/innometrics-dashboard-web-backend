@@ -7,6 +7,9 @@ class Measurement(models.Model):
     type = models.CharField(max_length=16)
     name = models.CharField(max_length=200)
     value = models.CharField(max_length=255)
+
+    class Meta:
+        ordering = ('id',)
     
     def __str__(self):
         return('%s:%s' % (self.name, self.value))
