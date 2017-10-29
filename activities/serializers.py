@@ -21,6 +21,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+        participation, created = UserParticipation.objects.get_or_create(user=user, project=None)
+        participation.save()
         return user
 
 

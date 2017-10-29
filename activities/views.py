@@ -81,8 +81,7 @@ class ActivityList(APIView):
         brokenSerializers = []
         for data in request.data['activities']:
             user = request.user
-            participation, created = UserParticipation.objects.get_or_create(user=user, project=None)
-            participation.save()
+            participation = UserParticipation.objects.get(user=user, project=None)
             entity, created = Entity.objects.get_or_create(name=data['name'])
             entity.save()
             data['participation'] = participation.id
