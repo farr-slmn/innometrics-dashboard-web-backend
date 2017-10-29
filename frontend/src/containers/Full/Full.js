@@ -13,110 +13,60 @@ import Project from '../../views/Project/Project';
 class Full extends Component {
   constructor(props) {
       super(props);
-      const test_projects = [
-        {
-            id: 0,
-            name: "Project 0",
-            warnings: 0,
-            participants: [
-                {
-                    id: 0,
-                    fullName: "User 1",
-                    role: "Developer"
-                },
-                {
-                    id: 1,
-                    fullName: "User 2",
-                    role: "Developer"
-                },
-                {
-                    id: 3,
-                    fullName: "User 3",
-                    role: "Project Manager"
-                },
-            ],
-        },
-        {
-            id: 1,
-            name: "Project 1",
-            warnings: 0,
-            participants: [
-                {
-                    id: 0,
-                    fullName: "User 1",
-                    role: "Developer"
-                },
-                {
-                    id: 1,
-                    fullName: "User 2",
-                    role: "QA"
-                },
-                {
-                    id: 3,
-                    fullName: "User 3",
-                    role: "Project Manager"
-                },
-            ],
-        },
-        {
-            id: 2,
-            name: "Project 2",
-            warnings: 3,
-            participants: [
-                {
-                    id: 0,
-                    fullName: "User 1",
-                    role: "Developer"
-                },
-                {
-                    id: 3,
-                    fullName: "User 3",
-                    role: "Project Manager"
-                },
-            ],
-        }
-      ];
 
-      this.sidebar_items = test_projects.map((project) => {
-          return {
-              id: project.id,
-              name: project.name,
-              url: "/project/" + project.id,
-              icon: 'icon-folder-alt',
-              badge: project.warnings ? {
-                variant: 'warning',
-                text: '3'
-              } : 0,
-          };
-      });
+      this.state = {
+          sidebar_items: [],
+          projectComponents: [],
+          default_project: undefined,
+      };
+  }
 
-      this.default_project = 1;
-      this.projects = test_projects.map((project, idx) => (
-        <Project proj={project}/>
-      ));
+  componentDidMount() {
+      fetch('/projects/?format=json', { credentials: "same-origin" })
+          .then(results => {
+              return results.json();
+          })
+          .then(data => {
+              const projects = data.results;
+              this.setState({
+                  sidebar_items: projects.map((project) => {
+                      return {
+                          id: project.id,
+                          name: project.name,
+                          url: "/project/" + project.id,
+                          icon: 'icon-folder-alt',
+                          badge: project.warnings ? {
+                            variant: 'warning',
+                            text: '3'
+                          } : 0,
+                      };
+                  }),
+                  projectComponents: projects.map((project, idx) => (
+                    <Project proj={project}/>
+                  )),
+                  default_project: projects ? projects[0].id : undefined,
+              });
+          });
   }
 
   render() {
-
 
     return (
       <div className="app">
         <Header />
         <div className="app-body">
-          <Sidebar {...this.props} items={this.sidebar_items}/>
+          <Sidebar {...this.props} items={this.state.sidebar_items}/>
           <main className="main">
             {/*<Breadcrumb />*/}
             <Container fluid>
-              {this.projects.map((project, idx) => (
+              {this.state.projectComponents.map((project, idx) => (
                 <Switch key={project.props.proj.id}>
                   <Route path={"/project/" + project.props.proj.id}  name={project.props.proj.name}>
                     {project}
                   </Route>
                 </Switch>
               ))}
-                <Switch>
-                    <Redirect exact from="/" to={"/project/" + this.default_project}/>
-                </Switch>
+              <DefaultProjectRedirect id={this.state.default_project}/>
             </Container>
           </main>
           <Aside />
@@ -125,6 +75,17 @@ class Full extends Component {
       </div>
     );
   }
+}
+
+function DefaultProjectRedirect(props) {
+  if (props.id >= 0) {
+    return (
+        <Switch>
+            <Redirect exact from="/" to={"/project/" + props.id}/>
+        </Switch>
+    );
+  }
+  return (<div/>);
 }
 
 export default Full;
