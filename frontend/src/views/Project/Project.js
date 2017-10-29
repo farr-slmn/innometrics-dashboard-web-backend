@@ -3,6 +3,7 @@ import DashboardItem from '../DashboardItem/DashboardItem';
 import Members from '../Members/Members'
 import { Line } from 'react-chartjs-2';
 import {Link, NavLink, Redirect, Route, Switch} from "react-router-dom";
+import Metric from "../Metric/Metric";
 
 const data = {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -50,6 +51,9 @@ class Project extends Component {
                 </li>
                 <li className="nav-item">
                     <NavLink to={"/project/" + this.proj.id + "/members/"} className="nav-link" activeClassName="active">Project members</NavLink>
+                </li>
+                <li className="nav-item">
+                    <NavLink to={"/project/" + this.proj.id + "/metric/"} className="nav-link" activeClassName="active">Metric Tst</NavLink>
                 </li>
                 <li className="nav-item">
                     <a className="nav-link" href="#">Testing</a>
@@ -166,6 +170,11 @@ class Project extends Component {
                   </div>
                 </div>
               </Route>
+            </Switch>
+            <Switch>
+                <Route path={"/project/" + this.proj.id + "/metric/"}>
+                    <Metric project={this.proj.id}/>
+                </Route>
             </Switch>
         </div>
     )

@@ -85,7 +85,7 @@ function DefaultProjectRedirect(props) {
         </Switch>
     );
   }
-  return (<div/>);
+  return (null);
 }
 
 export default Full;
