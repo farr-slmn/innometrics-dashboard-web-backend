@@ -11,7 +11,7 @@ class Project(models.Model):
 
 class UserParticipation(models.Model):
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name='participations')
 
     def __str__(self):
         return str(self.user) + " - " + str(self.project)

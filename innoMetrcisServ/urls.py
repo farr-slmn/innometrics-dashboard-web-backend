@@ -37,5 +37,8 @@ urlpatterns = [
     # for dashboards:
     url(r'^dashboard/', include('dash.urls')),
     url(r'^dash_react/', TemplateView.as_view(template_name="dash_react.html")),
+
+    url(r'^projects/', include('projects.urls')),
+
     url(r'^', include('dash.contrib.apps.public_dashboard.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
