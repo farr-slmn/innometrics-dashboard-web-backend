@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 
-from activities.models import Activity
-from activities.serializers import ActivitySerializer, UserSerializer
+from activities.models import Activity, Entity
+from activities.serializers import ActivitySerializer, UserSerializer, EntitySerializer
+from projects.models import UserParticipation
 
 
 class DownloadList(APIView):
@@ -59,7 +60,9 @@ class ActivityList(APIView):
     page_size = 20
 
     def get(self, request, format=None):
-        activities = Activity.objects.filter(user=request.user.id)
+        project_id = request.data["project_id"] if "project_id" in request.data else None
+        participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
+        activities = Activity.objects.filter(participation=participation)
         paginator = Paginator(activities, self.page_size)
         page = request.GET.get('page')
         try:
@@ -77,7 +80,12 @@ class ActivityList(APIView):
         serializers = []
         brokenSerializers = []
         for data in request.data['activities']:
-            data['user'] = request.user.id
+            user = request.user
+            participation = UserParticipation.objects.get(user=user, project=None)
+            entity, created = Entity.objects.get_or_create(name=data['name'])
+            entity.save()
+            data['participation'] = participation.id
+            data['entity'] = entity.id
             serializer = ActivitySerializer(data=data)
             noErrors = noErrors and serializer.is_valid()
             if serializer.is_valid():
