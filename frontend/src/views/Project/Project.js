@@ -3,7 +3,7 @@ import DashboardItem from '../DashboardItem/DashboardItem';
 import Members from '../Members/Members'
 import { Line } from 'react-chartjs-2';
 import {Link, NavLink, Redirect, Route, Switch} from "react-router-dom";
-import Metric from "../Metric/Metric";
+import Metrics from "../Metrics/Metrics";
 
 const data = {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -173,7 +173,7 @@ class Project extends Component {
             </Switch>
             <Switch>
                 <Route path={"/project/" + this.proj.id + "/metric/"}>
-                    <Metric project={this.proj.id}/>
+                    <Metrics project={this.proj.id}/>
                 </Route>
             </Switch>
         </div>
