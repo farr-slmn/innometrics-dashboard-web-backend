@@ -21,4 +21,4 @@ class JoinedMeasurementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Measurement
-        fields = ('id', 'name', 'value', 'type', 'entity', 'group')
+        fields = ('id', 'name', 'value', 'type', 'activity_id', 'entity', 'group')

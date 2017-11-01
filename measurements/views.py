@@ -5,8 +5,11 @@ from measurements.serializers import MeasurementSerializer, JoinedMeasurementSer
 from rest_framework.views import APIView
 
 
-def filter_measurements(request, serializer_class):
+def filter_measurements(request, serializer_class, personal=True):
     measurements = Measurement.objects.all()
+
+    if personal:
+        measurements = Measurement.objects.filter(activity__participation__user=request.user.id)
 
     project = request.GET.get('project', None)
     if (project is not None) and (int(project) >= 0):
@@ -36,4 +39,4 @@ class MeasurementsList(APIView):
 
 class JoinedMeasurementsList(APIView):
     def get(self, request, format=None):
-        return filter_measurements(request, JoinedMeasurementSerializer)
+        return filter_measurements(request, JoinedMeasurementSerializer, personal=True)
