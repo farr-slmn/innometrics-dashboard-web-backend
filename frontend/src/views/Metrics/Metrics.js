@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import { Line } from 'react-chartjs-2';
+import {Line} from 'react-chartjs-2';
+import {Link, Redirect, Route, Router, Switch} from "react-router-dom";
 
 class Metrics extends Component {
 
@@ -8,7 +9,7 @@ class Metrics extends Component {
         this.state = {
             projectId: props.project,
             metrics: [
-                {
+                /*{
                     id: 1,
                     type: 'raw',
                     name: 'Win browser apps connect time',
@@ -73,7 +74,7 @@ class Metrics extends Component {
                     ],
                     aggregate: 'timeinter',
                     groupby: ['day', 'sum'],
-                },
+                },*/
                 {
                     id: 7,
                     name: 'Win browser apps / All apps time fraction',
@@ -143,6 +144,7 @@ class Metrics extends Component {
     render() {
         return (
             <div>
+                <Redirect from={"/project/" + this.state.projectId + "/metric/"} to={"/project/" + this.state.projectId + "/metric/" + this.state.metrics[0].id}/>
                 {this.metricComponents}
             </div>
         );
@@ -163,6 +165,34 @@ class Metric extends Component {
             yValues: [],
             measurements: []
         };
+        this.redirects = [];
+        this.views = [];
+        if (this.state.metricInfo.components) {
+            this.state.metricInfo.components.map((compMet, idx) => {
+                this.redirects.push(
+                    <Link to={"/project/" + this.state.projectId + "/metric/" + compMet.id}>
+                        <button type="button" className="btn btn-primary">{compMet.name}</button>
+
+                    </Link>
+                );
+                this.views.push(
+                    <Route path={"/project/" + this.state.projectId + "/metric/" + compMet.id} key={idx}>
+                        <Metric project={this.state.projectId} metricInfo={compMet}/>
+                    </Route>
+                );
+                if (compMet.components) {
+                    compMet.components.map(met => {
+                        this.views.push(
+                            <Route path={"/project/" + this.state.projectId + "/metric/" + met.id} key={idx}>
+                                <Metric project={this.state.projectId} metricInfo={met}/>
+                            </Route>
+                        );
+                    });
+                }
+
+            });
+
+        }
     }
 
     groupday(value, index, array) {
@@ -233,7 +263,7 @@ class Metric extends Component {
             let ms = [];
 
             let requests = [];
-            let fetchMeasurements = function(metric, idx, projId) {
+            let fetchMeasurements = function (metric, idx, projId) {
                 let url = '/measurements/joined/?project=' + projId;
                 if (metric.filters) {
                     metric.filters.map((filter) => {
@@ -309,6 +339,7 @@ class Metric extends Component {
                                     break;
                             }
                         });
+
                         // console.log('activityValues', activityValues);
                         function groupByDay(activityValues, key_func, agg_func) {
                             let byDay = {};
@@ -404,7 +435,7 @@ class Metric extends Component {
 
                         // TODO map according to date
                         let xVal = xVal0.map((x, i) => {
-                            switch(this.state.metricInfo.aggregate) {
+                            switch (this.state.metricInfo.aggregate) {
                                 case 'div':
                                     return x / xVal1[i];
                                 case 'mult':
@@ -434,23 +465,42 @@ class Metric extends Component {
     render() {
         return (
             <div className="">
-                {this.state.value}
-                <MetricChart type={this.state.metricInfo.type} data={this.state.chartData}/>
-                <table className="table table-striped">
-                    <thead>
-                    <TableHeaders measurement={this.state.measurements[0]}/>
-                    </thead>
-                    <tbody>
-                    {this.state.measurements.map((measurement, idx) => (
-                        <tr key={idx}>
-                            <th scope="row">{idx + 1}</th>
-                            {Object.keys(measurement).map((key, index) => (
-                                <td key={index}>{measurement[key]}</td>
+
+
+                <Switch>
+                    <Route exact path={"/project/" + this.state.projectId + "/metric/" + this.state.metricInfo.id}>
+                        <div>
+                        {this.redirects}
+                        {this.state.value}
+                        <MetricChart type={this.state.metricInfo.type} data={this.state.chartData}/>
+
+                        <table className="table table-striped">
+                            <thead>
+                            <TableHeaders measurement={this.state.measurements[0]}/>
+                            </thead>
+                            <tbody>
+                            {this.state.measurements.map((measurement, idx) => (
+                                <tr key={idx}>
+                                    <th scope="row">{idx + 1}</th>
+                                    {Object.keys(measurement).map((key, index) => (
+                                        <td key={index}>{measurement[key]}</td>
+                                    ))}
+                                </tr>
                             ))}
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
+                            </tbody>
+                        </table>
+                        </div>
+                    </Route>
+                    {/*<Redirect from={"/project/" + this.state.projectId + "/metrics/"}*/}
+                    {/*to={"/project/" + this.state.projectId + "/metrics/" + this.state.metricInfo.id}/>*/}
+
+                    {/*<MetricRoutes projectId={this.state.projectId} components={this.state.metricInfo.components}/>*/}
+
+                    {this.views}
+
+
+
+                </Switch>
             </div>
         );
     }
@@ -478,5 +528,34 @@ function MetricChart(props) {
     }
     return (null);
 }
+
+/*function MetricRoutes(props) {
+    if (props.components) {
+        return (
+            <div>
+                <button type="button" className="btn btn-primary">
+                    {props.components[0].name}
+                    <Link to={"/project/" + props.projectId + "/metric/" + props.components[0].id}/>
+                </button>
+                <button type="button" className="btn btn-primary">
+                    {props.components[1].name}
+                    <Link to={"/project/" + props.projectId + "/metric/" + props.components[1].id}/>
+                </button>
+                <Switch>
+                    <Route path={"/project/" + props.projectId + "/metric/" + props.components[0].id}>
+                        <Metrics project={props.projectId}/>
+                    </Route>
+                </Switch>
+                <Switch>
+                    <Route path={"/project/" + props.projectId + "/metric/" + props.components[1].id}>
+                        <Metrics project={props.projectId}/>
+                    </Route>
+                </Switch>
+            </div>
+        );
+    } else {
+        return (null);
+    }
+}*/
 
 export default Metrics;
