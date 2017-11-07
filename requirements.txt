@@ -6,3 +6,4 @@ gunicorn
 coreapi
 django-dash
 django-webpack-loader
+python-dateutil
