@@ -1,9 +1,7 @@
 {
-  "name": "coreui-react",
-  "version": "1.0.0-alpha.6",
-  "description": "CoreUI React Open Source Bootstrap Admin Template",
-  "author": "Łukasz Holeczek <lukasz@holeczek.pl>",
-  "url": "http://coreui.io",
+  "name": "innometrics-dashboard",
+  "version": "0.0.3",
+  "description": "InnoMetrics Dashboard",
   "copyright": "Copyright 2017 creativeLabs Łukasz Holeczek",
   "license": "MIT",
   "private": true,

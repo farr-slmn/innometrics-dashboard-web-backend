@@ -1,0 +1,6 @@
+{
+  "name": "MetricContainer",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./MetricContainer.js"
+}

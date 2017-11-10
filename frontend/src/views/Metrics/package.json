@@ -2,5 +2,5 @@
   "name": "Metrics",
   "version": "0.0.0",
   "private": true,
-  "main": "./Metrics.js"
+  "main": "./MetricsTile.js"
 }

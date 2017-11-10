@@ -34,7 +34,7 @@ class UserProjectMetrics(APIView):
                 result.append(metric)
 
         # leave only composite metrics for root tiles
-        result = filter(lambda m: m['type'] == 'C', result)
+        # result = filter(lambda m: m['type'] == 'C', result)
 
         return JsonResponse({'metrics': list(result)})
 
@@ -71,6 +71,7 @@ class UserProjectMetrics(APIView):
                 return self.retrieve_metric_data(mtc, participation, result_list) if type(mtc) is int else mtc
 
             components = list(map(retrieve, components))
+            # TODO leave only needed components info (e.g. id, name, value)
             metric_data['components'] = components
 
             if components[0]['type'] == 'R':
