@@ -144,40 +144,42 @@ class UserProjectMetrics(APIView):
                         grouped_items.sort(key=lambda x: x[0])  # sort by time
 
                         for seconds, value in grouped_items:
-                            y_val.append(str(date.fromtimestamp(int(seconds))))
-                            x_val.append(value)
+                            x_val.append(str(date.fromtimestamp(int(seconds))))
+                            y_val.append(value)
 
                         metric_data['x_values'] = x_val
                         metric_data['y_values'] = y_val
-                        if x_val:
-                            metric_data['value'] = x_val[-1]
+                        if y_val:
+                            metric_data['value'] = y_val[-1]
 
             else:
-                x_val_0 = components[0]['x_values']
-                x_val_1 = components[1]['x_values']
-
                 y_val_0 = components[0]['y_values']
-                # yVal1 = components[1].yValues
+                y_val_1 = components[1]['y_values']
 
-                x_val = []
-                for i, val in enumerate(x_val_0):
-                    x_value = 0
-                    if aggregate == 'div':
-                        x_value = float(x_val_0[i]) / float(x_val_1[i])
-                    elif aggregate == 'mult':
-                        x_value = float(x_val_0[i]) * float(x_val_1[i])
-                    elif aggregate == 'sum':
-                        x_value = float(x_val_0[i]) + float(x_val_1[i])
-                    elif aggregate == 'minus':
-                        x_value = float(x_val_0[i]) - float(x_val_1[i])
-                    elif aggregate == 'avg':
-                        x_value = (float(x_val_0[i]) + float(x_val_1[i])) / 2
+                x_val_0 = components[0]['x_values']
 
-                    x_val.append(x_value)
+                y_val = []
 
-                metric_data['x_values'] = x_val
-                metric_data['y_values'] = y_val_0
-                if x_val:
-                    metric_data['value'] = x_val[-1]
+                # TODO aggregation with different values lengths
+                if len(y_val_0) == len(y_val_1):
+                    for i, val in enumerate(y_val_0):
+                        y_value = 0
+                        if aggregate == 'div':
+                            y_value = float(y_val_0[i]) / float(y_val_1[i])
+                        elif aggregate == 'mult':
+                            y_value = float(y_val_0[i]) * float(y_val_1[i])
+                        elif aggregate == 'sum':
+                            y_value = float(y_val_0[i]) + float(y_val_1[i])
+                        elif aggregate == 'minus':
+                            y_value = float(y_val_0[i]) - float(y_val_1[i])
+                        elif aggregate == 'avg':
+                            y_value = (float(y_val_0[i]) + float(y_val_1[i])) / 2
+
+                        y_val.append(y_value)
+
+                metric_data['x_values'] = x_val_0
+                metric_data['y_values'] = y_val
+                if y_val:
+                    metric_data['value'] = y_val[-1]
 
         return metric_data
