@@ -54,6 +54,17 @@ class UserProjectMetrics(APIView):
             group = metric.info['filters'].get('group', None)
             if group and int(group) >= 0:
                 measurements = measurements.filter(activity__entity__group_id=group)
+
+            field_from = metric.info['filters'].get('field_from', None)
+            if field_from:
+                print(metric.id)
+                print(field_from)
+                measurements = measurements.filter(value__gte=field_from)
+
+            field_to = metric.info['filters'].get('field_to', None)
+            if field_to:
+                measurements = measurements.filter(value__lte=field_to)
+
             metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
 
         else:
@@ -129,7 +140,10 @@ class UserProjectMetrics(APIView):
                         x_val = []
                         y_val = []
 
-                        for seconds, value in grouped.items():
+                        grouped_items = list(grouped.items())
+                        grouped_items.sort(key=lambda x: x[0])  # sort by time
+
+                        for seconds, value in grouped_items:
                             y_val.append(str(date.fromtimestamp(int(seconds))))
                             x_val.append(value)
 
