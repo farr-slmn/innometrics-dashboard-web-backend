@@ -43,7 +43,8 @@
 		<li><a href="javascript:void(0)" onclick="openTab('macOS')">macOS</a></li>
 		<li><a href="javascript:void(0)" onclick="openTab('Linux')">Linux</a></li>
 		<li><a href="javascript:void(0)" onclick="openTab('Windows')">Windows</a></li>
-		<!-- <li><a href="javascript:void(0)" onclick="openTab('Project')">Project</a></li>  --> 
+		<li><a href="javascript:void(0)" onclick="openTab('IDE_plugins')">IDE plugins</a></li>
+		<!-- <li><a href="javascript:void(0)" onclick="openTab('Project')">Project</a></li>  -->
 	</ul>
 	<div id="Intro" class="tabText" style="display: block">
 		Greetings, manager.
@@ -220,7 +221,27 @@
 		
 	</div>
 
-
+    <div id="IDE_plugins" class="tabText" style="display: none">
+        <h4>JetBrains IDE plugin: IntelliJ IDEA, PyCharm</h4>
+        <p>
+            Installation:
+            <ul>
+                <li> Download plugin archive: <a href='/downloadables/Innometrics-JB-plugin.zip' download>Innometrics-JB-plugin.zip</a> </li>
+                <li> Open JetBrains IDE application</li>
+                <li> Go to <code>File -> Settings... -> Plugins -> Install plugin from disk... -></code> path to the plugin zip archive.</li>
+                <li> Restart the IDE.</li>
+            </ul>
+        </p>
+        <p>
+            Sending measurements & Settings:
+            <ul>
+                <li> Open JetBrains IDE application (the plugin must be enabled)</li>
+                <li> Go to <code>Tools -> Innometrics plugin</code></li>
+                <li> Enter login and password for InnoMetrics system</li>
+                <li> Enter InnoMetrics system url location</li>
+                <li> Click OK to save and go to sending activities conformation dialog.</li>
+            </ul>
+        </p>
 	</div>
 
 	<div id="Project" class="tabText" style="display: none">
