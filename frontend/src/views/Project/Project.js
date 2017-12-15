@@ -16,6 +16,7 @@ class Project extends Component {
         };
 
         this.toggle = this.toggle.bind(this);
+        this.newMetric = this.newMetric.bind(this);
     }
 
     componentDidMount() {
@@ -32,6 +33,21 @@ class Project extends Component {
     toggle() {
         this.setState({
             newMetricModal: !this.state.newMetricModal
+        });
+    }
+
+    newMetric(metrics) {
+        let mergedMetrics = this.state.metrics;
+        for (let i = 0; i < metrics.length; i++) {
+            let idx = mergedMetrics.findIndex(el => metrics[i].id === el.id);
+            if (idx >= 0) {
+                mergedMetrics[idx] = metrics[i];
+            } else {
+                mergedMetrics.push(metrics[i]);
+            }
+        }
+        this.setState({
+            metrics: mergedMetrics,
         });
     }
 
@@ -202,7 +218,7 @@ class Project extends Component {
                     <Route path={"/project/" + this.proj.id + "/metric/:metricId"} component={MetricContainer}/>
                 </Switch>*/}
 
-                <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} projId={this.proj.id}/>
+                <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} projId={this.proj.id} callbk={this.newMetric}/>
 
                 </Container>
             </div>

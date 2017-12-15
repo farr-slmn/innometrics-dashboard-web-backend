@@ -29,8 +29,12 @@ class UserProjectMetrics(APIView):
         request.data['participation'] = participation.id
         serializer = MetricSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+            new_metric = serializer.save()
+            metrics = []
+            metric = self.retrieve_metric_data(new_metric, participation, metrics)
+            if metric not in metrics:
+                metrics.append(metric)
+            return JsonResponse({'metrics': list(metrics)}, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
@@ -60,6 +64,8 @@ class UserProjectMetrics(APIView):
         if metric.type == Metric.RAW:
             measurement_field = metric.info['field']
             measurements = Measurement.objects.filter(activity__participation=participation, name=measurement_field)
+
+            # TODO activity filter
 
             group = metric.info['filters'].get('group', None)
             if group and int(group) >= 0:
