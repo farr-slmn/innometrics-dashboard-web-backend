@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 
+from activities.models import Activity, Entity
 from measurements.models import Measurement
 from measurements.serializers import JoinedMeasurementSerializer
 from projects.models import Project, Metric, UserParticipation
@@ -18,6 +19,20 @@ class ProjectList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+
+class ProjectActivitiesAutocomlete(APIView):
+    def get(self, request):
+        project_id = request.GET.get('project', None)
+        participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
+        activities = Entity.objects.filter(activity__participation=participation).values("name").distinct()
+        result = []
+        for activity in activities:
+            item = {'name': activity['name']}
+            query = Measurement.objects.filter(activity__participation=participation, activity__entity__name=activity['name'])
+            item['fields'] = list(field[0] for field in set(query.values_list("name").distinct()))
+            result.append(item)
+        return JsonResponse({'activities': list(result)})
 
 
 class UserProjectMetrics(APIView):
@@ -65,7 +80,9 @@ class UserProjectMetrics(APIView):
             measurement_field = metric.info['field']
             measurements = Measurement.objects.filter(activity__participation=participation, name=measurement_field)
 
-            # TODO activity filter
+            activity_name = metric.info.get('activity', None)
+            if activity_name:
+                measurements = measurements.filter(activity__entity__name=activity_name)
 
             group = metric.info['filters'].get('group', None)
             if group and int(group) >= 0:
