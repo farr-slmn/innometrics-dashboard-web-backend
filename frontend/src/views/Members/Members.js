@@ -10,7 +10,7 @@ class Members extends Component {
 
     render() {
         return (
-            <div className="">
+            <div className="animated fadeIn">
                 <table className="table table-striped">
                   <thead>
                     <tr>

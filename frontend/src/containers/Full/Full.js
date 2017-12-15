@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {Redirect, Route, Switch} from 'react-router-dom';
-import {Container} from 'reactstrap';
 import Header from '../../components/Header/';
 import Sidebar from '../../components/Sidebar/';
 // import Breadcrumb from '../../components/Breadcrumb/';
@@ -58,7 +57,7 @@ class Full extends Component {
                     <Sidebar {...this.props} items={this.state.sidebar_items}/>
                     <main className="main">
                         {/*<Breadcrumb />*/}
-                        <Container fluid>
+                        <div>
                             {this.state.projectComponents.map((project, idx) => (
                                 <Switch key={project.props.proj.id}>
                                     <Route path={"/project/" + project.props.proj.id} name={project.props.proj.name}>
@@ -67,7 +66,7 @@ class Full extends Component {
                                 </Switch>
                             ))}
                             <DefaultProjectRedirect id={this.state.default_project}/>
-                        </Container>
+                        </div>
                     </main>
                     {/*<Aside />*/}
                 </div>

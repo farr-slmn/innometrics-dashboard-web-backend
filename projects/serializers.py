@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from projects.models import Project, UserParticipation
+from projects.models import Project, UserParticipation, Metric
 
 
 class ProjectMembersSerializer(serializers.ModelSerializer):
@@ -20,3 +20,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'name', 'description', 'participants')
+
+
+class MetricSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Metric
+        fields = ('id', 'name', 'type', 'info', 'participation')
+
+    def create(self, validated_data):
+        metric = Metric.objects.create(**validated_data)
+        return metric

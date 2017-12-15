@@ -3,6 +3,8 @@ import Members from '../Members/Members'
 import {NavLink, Redirect, Route, Switch} from "react-router-dom";
 import MetricTile from "../Metrics/MetricTile";
 import MetricContainer from "../../containers/MetricContainer/MetricContainer";
+import {Button, Container} from 'reactstrap';
+import NewMetricModal from "./NewMetricModal";
 
 class Project extends Component {
     constructor(props) {
@@ -10,8 +12,10 @@ class Project extends Component {
         this.proj = props.proj;
         this.state = {
             metrics: [],
-
+            newMetricModal: true,
         };
+
+        this.toggle = this.toggle.bind(this);
     }
 
     componentDidMount() {
@@ -25,6 +29,12 @@ class Project extends Component {
             });
     }
 
+    toggle() {
+        this.setState({
+            newMetricModal: !this.state.newMetricModal
+        });
+    }
+
     render() {
         const pr_bar_style = {
             width: '25%'
@@ -32,6 +42,14 @@ class Project extends Component {
 
         return (
             <div>
+                <div className="breadcrumb">
+                    <h5>{this.proj.name}</h5>
+                    <div className="breadcrumb-menu d-md-down-none">
+                        {/*<a className="btn" href="#"><i className="icon-plus"/> New metric</a>*/}
+                        <Button onClick={this.toggle} color="link"><i className="icon-plus"/> New metric</Button>
+                    </div>
+                </div>
+                <Container fluid>
                 <ul className="nav nav-tabs">
                     <li className="nav-item">
                         <NavLink to={"/project/" + this.proj.id + "/general/"} className="nav-link"
@@ -155,10 +173,10 @@ class Project extends Component {
                                 </div>
                             </div>
 
-                            <div className="row animated fadeIn">
+                            <div className="row">
                                 {this.state.metrics.filter(metric => metric.type === 'C')
                                     .map(metric => (
-                                        <div className="col-12 col-sm-3 col-md-2" key={metric.id}>
+                                        <div className="col-12 col-sm-3 col-md-2 animated fadeIn" key={metric.id}>
                                             <MetricTile trend="neutral"
                                                         projectId={this.proj.id}
                                                         id={metric.id}
@@ -183,6 +201,10 @@ class Project extends Component {
                 {/*<Switch>
                     <Route path={"/project/" + this.proj.id + "/metric/:metricId"} component={MetricContainer}/>
                 </Switch>*/}
+
+                <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} projId={this.proj.id}/>
+
+                </Container>
             </div>
         )
     }
