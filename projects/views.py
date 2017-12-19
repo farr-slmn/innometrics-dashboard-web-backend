@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 
-from activities.models import Activity, Entity
+from activities.models import Entity
 from measurements.models import Measurement
 from measurements.serializers import JoinedMeasurementSerializer
 from projects.models import Project, Metric, UserParticipation

@@ -21,7 +21,10 @@ class NewMetricModal extends Component {
 
     componentDidMount() {
         // retrieve activities and activities fields for autocomplete
-        let url = '/projects/metrics/activities/?project=' + this.props.projId;
+        let url = '/projects/metrics/activities/';
+        if (Number.isInteger(this.props.projId)) {
+            url += '?project=' + this.props.projId;
+        }
         fetch(url, {credentials: "same-origin"})
             .then(results => results.json())
             .then(data => {
@@ -94,7 +97,10 @@ class NewMetricModal extends Component {
         console.log(submitObj);
 
         // create metric request
-        let url = '/projects/metrics/?project=' + this.props.projId;
+        let url = '/projects/metrics/';
+        if (Number.isInteger(this.props.projId)) {
+            url += '?project=' + this.props.projId;
+        }
         fetch(url, {
             credentials: "same-origin",
             method: "PUT",

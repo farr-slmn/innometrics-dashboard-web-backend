@@ -27,19 +27,21 @@ class Full extends Component {
             })
             .then(data => {
                 const projects = data.results;
+                projects.unshift({
+                    id: "all",
+                    name: "(Default)",
+                });
                 this.setState({
-                    sidebar_items: projects.map((project) => {
-                        return {
-                            id: project.id,
-                            name: project.name,
-                            url: "/project/" + project.id,
-                            icon: 'icon-folder-alt',
-                            badge: project.warnings ? {
-                                variant: 'warning',
-                                text: '3'
-                            } : 0,
-                        };
-                    }),
+                    sidebar_items: projects.map((project) => ({
+                        id: project.id,
+                        name: project.name,
+                        url: "/project/" + project.id,
+                        icon: 'icon-folder-alt',
+                        badge: project.warnings ? {
+                            variant: 'warning',
+                            text: '3'
+                        } : 0,
+                    })),
                     projectComponents: projects.map((project, idx) => (
                         <Project proj={project}/>
                     )),
@@ -77,7 +79,7 @@ class Full extends Component {
 }
 
 function DefaultProjectRedirect(props) {
-    if (props.id >= 0) {
+    if (props.id || props.id === 0) {
         return (
             <Switch>
                 <Redirect exact from="/" to={"/project/" + props.id}/>

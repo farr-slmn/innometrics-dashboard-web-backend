@@ -20,7 +20,10 @@ class Project extends Component {
     }
 
     componentDidMount() {
-        let url = '/projects/metrics/?project=' + this.proj.id;
+        let url = '/projects/metrics/';
+        if (Number.isInteger(this.proj.id)) {
+            url += '?project=' + this.proj.id;
+        }
         fetch(url, {credentials: "same-origin"})
             .then(results => results.json())
             .then(data => {
@@ -61,7 +64,6 @@ class Project extends Component {
                 <div className="breadcrumb">
                     <h5>{this.proj.name}</h5>
                     <div className="breadcrumb-menu d-md-down-none">
-                        {/*<a className="btn" href="#"><i className="icon-plus"/> New metric</a>*/}
                         <Button onClick={this.toggle} color="link"><i className="icon-plus"/> New metric</Button>
                     </div>
                 </div>
@@ -72,18 +74,14 @@ class Project extends Component {
                                  activeClassName="active">General</NavLink>
                     </li>
                     <li className="nav-item">
+                        {/* disable link for default project */}
                         <NavLink to={"/project/" + this.proj.id + "/members/"} className="nav-link"
+                                 style={Number.isInteger(this.proj.id) ? {} : {pointerEvents: 'none'}}
                                  activeClassName="active">Project members</NavLink>
                     </li>
                     <li className="nav-item">
                         <NavLink to={"/project/" + this.proj.id + "/metric/"} className="nav-link"
                                  activeClassName="active">Metrics</NavLink>
-                    </li>
-                    <li className="nav-item">
-                        <a className="nav-link" href="#">Testing</a>
-                    </li>
-                    <li className="nav-item">
-                        <a className="nav-link" href="#">History</a>
                     </li>
                     <li className="nav-item">
                         <NavLink to={"/project/" + this.proj.id + "/preferences/"} className="nav-link"
