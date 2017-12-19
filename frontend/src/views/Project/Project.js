@@ -2,9 +2,9 @@ import React, {Component} from 'react';
 import Members from '../Members/Members'
 import {NavLink, Redirect, Route, Switch} from "react-router-dom";
 import MetricTile from "../Metrics/MetricTile";
-import MetricContainer from "../../containers/MetricContainer/MetricContainer";
 import {Button, Container} from 'reactstrap';
 import NewMetricModal from "./NewMetricModal";
+import MetricsContainer from "../../containers/MetricContainer/MetricsContainer";
 
 class Project extends Component {
     constructor(props) {
@@ -203,18 +203,12 @@ class Project extends Component {
                         </div>
                     </Route>
                 </Switch>
-                {this.state.metrics.map(metric => (
-                    <Switch key={"metric_" + metric.id}>
-                        <Route path={"/project/" + this.proj.id + "/metric/" + metric.id}>
-                            <div className="animated fadeIn">
-                                <MetricContainer metric={metric} projId={this.proj.id}/>
-                            </div>
-                        </Route>
-                    </Switch>
-                ))}
-                {/*<Switch>
-                    <Route path={"/project/" + this.proj.id + "/metric/:metricId"} component={MetricContainer}/>
-                </Switch>*/}
+
+                <Switch>
+                    <Route path={"/project/" + this.proj.id + "/metric/"}>
+                        <MetricsContainer projId={this.proj.id} metrics={this.state.metrics}/>
+                    </Route>
+                </Switch>
 
                 <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} projId={this.proj.id} callbk={this.newMetric}/>
 
