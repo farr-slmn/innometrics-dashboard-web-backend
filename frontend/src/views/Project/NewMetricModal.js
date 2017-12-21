@@ -1,16 +1,16 @@
 import React, {Component} from 'react';
 import {Button, Col, Form, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader} from "reactstrap";
-import DjangoCSRFToken from 'django-react-csrftoken'
+import cookie from 'react-cookie';
 
 class NewMetricModal extends Component {
     constructor(props) {
         super(props);
         this.state = {
             name: "default",
-            type: "R",
+            type: "C",
             filters: [],
             activities: [],
-            fields: [],
+            fields: []
         };
 
         this.addFilter = this.addFilter.bind(this);
@@ -62,8 +62,14 @@ class NewMetricModal extends Component {
         this.setState({fields: fields});
     }
 
-    formSubmit(e) {
-        e.preventDefault();
+    static getSubmitObj(type, e) {
+        if (type === "R") {
+            return NewMetricModal.rawMetricSubmitObj(e);
+        }
+        return NewMetricModal.compositeMetricSubmitObj(e);
+    }
+
+    static rawMetricSubmitObj(e) {
         // raw metric structure
         let submitObj = {
             name: undefined, // string
@@ -74,7 +80,6 @@ class NewMetricModal extends Component {
                 //activity: undefined, // string, optional
             }
         };
-        let csrf = "";
         let fType;
         let filters = {};
         // build POST body object
@@ -86,14 +91,43 @@ class NewMetricModal extends Component {
                     filters[fType] = e.target[i].value;
                 } else if (e.target[i].name === "field" || e.target[i].name === "activity") {
                     submitObj.info[e.target[i].name] = e.target[i].value;
-                } else if (e.target[i].name === "csrfmiddlewaretoken") {
-                    csrf = e.target[i].value;
                 } else {
                     submitObj[e.target[i].name] = e.target[i].value;
                 }
             }
         }
         submitObj.info.filters = filters;
+        return submitObj;
+    }
+
+    static compositeMetricSubmitObj(e) {
+        // composite metric structure
+        let submitObj = {
+            name: undefined, // string
+            type: undefined, // 'C' for raw
+            info: {
+                components: [], // list of metrics ids
+                aggregate: undefined, // operation for aggregation: 'minus', 'timeinter'
+            }
+        };
+        // build POST body object
+        for (let i = 0; i < e.target.length; i++) {
+            if (e.target[i].name && e.target[i].value) {
+                if (e.target[i].name === "metric") {
+                    submitObj.info.components.push(e.target[i].value);
+                } else if (e.target[i].name === "aggregate" || e.target[i].name === "groupby") {
+                    submitObj.info[e.target[i].name] = e.target[i].value;
+                } else {
+                    submitObj[e.target[i].name] = e.target[i].value;
+                }
+            }
+        }
+        return submitObj;
+    }
+
+    formSubmit(e) {
+        e.preventDefault();
+        let submitObj = NewMetricModal.getSubmitObj(this.state.type, e);
         console.log(submitObj);
 
         // create metric request
@@ -107,7 +141,7 @@ class NewMetricModal extends Component {
             headers: {
                 Accept: "application/json",
                 'Content-Type': "application/json",
-                'X-CSRFToken': csrf,
+                'X-CSRFToken': cookie.load('csrftoken'),
             },
             body: JSON.stringify(submitObj)
         })
@@ -129,13 +163,89 @@ class NewMetricModal extends Component {
     }
 
     render() {
+        let formInputs;
+        if (this.state.type === "R") {
+            formInputs = [
+                (<FormGroup row key="activity">
+                    <Label for="activity" sm={3}>Activity</Label>
+                    <Col sm={9}>
+                        <Input type="select" name="activity" id="activity"
+                               onChange={this.changeActivity} defaultValue="">
+                            <option value="">-- Select an activity (optional) --</option>
+                            {this.state.activities.map((a, i) => (
+                                <option key={i} value={a.name}>{a.name}</option>))}
+                        </Input>
+                    </Col>
+                </FormGroup>),
+
+                (<FormGroup row key="field">
+                    <Label for="field" sm={3}>Activity field</Label>
+                    <Col sm={9}>
+                        {this.state.fields.length ?
+                            (<Input type="select" name="field" id="metricField" defaultValue="" required>
+                                <option value="" disabled>Please select an item</option>
+                                {this.state.fields.map((a, i) => (<option key={i} value={a}>{a}</option>))}
+                            </Input>) :
+                            // TODO add autocomplete
+                            (<Input type="text" name="field" id="metricField" onChange={this.changeField}
+                                    required/>)
+                        }
+                    </Col>
+                </FormGroup>),
+
+                (<FormGroup key="filters">
+                    <h5>Filters</h5>
+                    {this.state.filters}
+                </FormGroup>),
+
+                (<Button key="addFilter" color="link" onClick={this.addFilter}>
+                    <i className="icon-plus"/> Add filter
+                </Button>),
+            ];
+        } else {
+            formInputs = [
+                (<FormGroup row key="metric1">
+                    <Label for="metric1" sm={3}>Metric 1</Label>
+                    <Col sm={9}>
+                        <Input type="select" name="metric" id="metric1"
+                               required defaultValue="">
+                            <option value="">-- Select a metric --</option>
+                            {this.props.metrics.map((m, i) => (
+                                <option key={i} value={m.id}>{m.name}</option>))}
+                        </Input>
+                    </Col>
+                </FormGroup>),
+                (<FormGroup row key="metric2">
+                    <Label for="metric2" sm={3}>Metric 2</Label>
+                    <Col sm={9}>
+                        <Input type="select" name="metric" id="metric2"
+                               required defaultValue="">
+                            <option value="">-- Select a metric --</option>
+                            {this.props.metrics.map((m, i) => (
+                                <option key={i} value={m.id}>{m.name}</option>))}
+                        </Input>
+                    </Col>
+                </FormGroup>),
+                (<FormGroup row key="aggregate">
+                    <Label for="aggregate" sm={3}>Operation</Label>
+                    <Col sm={9}>
+                        <Input type="select" name="aggregate" id="aggregate"
+                               required defaultValue="">
+                            <option value="">-- Select an operation --</option>
+                            <option value="minus">"-" - Subtraction</option>
+                            <option value="timeinter">Time interval between UTC time values</option>
+                        </Input>
+                    </Col>
+                </FormGroup>),
+            ];
+        }
+
         return (
             <div>
                 <Modal isOpen={this.props.newMetricModal} toggle={this.cancel} backdrop="static">
                     <Form onSubmit={this.formSubmit}>
                         <ModalHeader toggle={this.cancel}>New Metric</ModalHeader>
                         <ModalBody>
-                            <DjangoCSRFToken/>
                             <FormGroup row>
                                 <Label for="metricName" sm={3}>Name</Label>
                                 <Col sm={9}>
@@ -146,42 +256,15 @@ class NewMetricModal extends Component {
                             <FormGroup row>
                                 <Label for="metricType" sm={3}>Metric type</Label>
                                 <Col sm={9}>
-                                    <Input type="select" name="type" id="metricType" onChange={this.changeType}>
+                                    <Input type="select" name="type" id="metricType"
+                                           onChange={e => this.setState({type: e.target.value})}
+                                           defaultValue={this.state.type}>
                                         <option value="R">Raw</option>
                                         <option value="C">Composite</option>
                                     </Input>
                                 </Col>
                             </FormGroup>
-                            <FormGroup row>
-                                <Label for="activity" sm={3}>Activity</Label>
-                                <Col sm={9}>
-                                    <Input type="select" name="activity" id="activity"
-                                           onChange={this.changeActivity} defaultValue="">
-                                        <option value="">-- Select an activity (optional) --</option>
-                                        {this.state.activities.map((a, i) => (
-                                            <option key={i} value={a.name}>{a.name}</option>))}
-                                    </Input>
-                                </Col>
-                            </FormGroup>
-                            <FormGroup row>
-                                <Label for="field" sm={3}>Activity field</Label>
-                                <Col sm={9}>
-                                    {this.state.fields.length ?
-                                        (<Input type="select" name="field" id="metricField" defaultValue="" required>
-                                            <option value="" disabled>Please select an item</option>
-                                            {this.state.fields.map((a, i) => (<option key={i} value={a}>{a}</option>))}
-                                        </Input>) :
-                                        // TODO add autocomplete
-                                        (<Input type="text" name="field" id="metricField" onChange={this.changeField}
-                                                required/>)
-                                    }
-                                </Col>
-                            </FormGroup>
-                            <FormGroup>
-                                <h5>Filters</h5>
-                                {this.state.filters}
-                            </FormGroup>
-                            <Button color="link" onClick={this.addFilter}><i className="icon-plus"/> Add filter</Button>
+                            {formInputs}
                         </ModalBody>
                         <ModalFooter>
                             <Button color="primary" type="submit">Create</Button>{' '}

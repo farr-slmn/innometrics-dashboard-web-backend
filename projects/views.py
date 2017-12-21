@@ -29,7 +29,8 @@ class ProjectActivitiesAutocomlete(APIView):
         result = []
         for activity in activities:
             item = {'name': activity['name']}
-            query = Measurement.objects.filter(activity__participation=participation, activity__entity__name=activity['name'])
+            query = Measurement.objects.filter(activity__participation=participation,
+                                               activity__entity__name=activity['name'])
             item['fields'] = list(field[0] for field in set(query.values_list("name").distinct()))
             result.append(item)
         return JsonResponse({'activities': list(result)})
@@ -101,9 +102,9 @@ class UserProjectMetrics(APIView):
             metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
 
         else:
-            component_ids = metric.info['components']
+            component_ids = list(map(int, metric.info['components']))
             aggregate = metric.info['aggregate']
-            groupby = metric.info['groupby']
+            groupby = metric.info.get('groupby', None)
 
             # TODO more than two components
             components = [
@@ -124,17 +125,20 @@ class UserProjectMetrics(APIView):
                 activity_measurements = defaultdict(list)
                 for comp in components:
                     for idx, measurement in enumerate(comp['measurements']):
-                        activity_measurements[measurement['activity_id']].append(measurement)
+                        if groupby:
+                            activity_measurements[measurement['activity_id']].append(measurement)
+                        else:
+                            activity_measurements[idx].append(measurement)
 
                 activity_values = []
-                for act_id, measurements in activity_measurements.items():
+                for key, measurements in activity_measurements.items():
                     activity_value = {
                         'source': measurements
                     }
                     if aggregate == 'minus':
                         a = measurements[0]['value']
                         b = measurements[1]['value']
-                        activity_value['value'] = a - b
+                        activity_value['value'] = float(a) - float(b)
 
                     elif aggregate == 'timeinter':
                         # represent time as timestamp in seconds
@@ -155,6 +159,9 @@ class UserProjectMetrics(APIView):
                             by_day[day] = agg_func(by_day[day], av['value'])
                     return by_day
 
+                x_val = []
+                y_val = []
+
                 if groupby:
                     if groupby[0] == 'day':
                         agg_func = lambda a, b: a + b
@@ -170,20 +177,21 @@ class UserProjectMetrics(APIView):
 
                         grouped = group_by_day(activity_values, get_timestamp_from_activity, agg_func)
 
-                        x_val = []
-                        y_val = []
-
                         grouped_items = list(grouped.items())
                         grouped_items.sort(key=lambda x: x[0])  # sort by time
 
                         for seconds, value in grouped_items:
                             x_val.append(str(date.fromtimestamp(int(seconds))))
                             y_val.append(value)
+                else:
+                    activity_values.sort(key=lambda x: x['source'][0]['id'])
+                    y_val = list(map(lambda x: x['value'], activity_values))
+                    x_val = list(range(0, len(y_val)))
 
-                        metric_data['x_values'] = x_val
-                        metric_data['y_values'] = y_val
-                        if y_val:
-                            metric_data['value'] = y_val[-1]
+                metric_data['x_values'] = x_val
+                metric_data['y_values'] = y_val
+                if y_val:
+                    metric_data['value'] = y_val[-1]
 
             else:
                 y_val_0 = components[0]['y_values']

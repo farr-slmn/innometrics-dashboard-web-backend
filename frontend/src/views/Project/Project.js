@@ -210,7 +210,8 @@ class Project extends Component {
                     </Route>
                 </Switch>
 
-                <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} projId={this.proj.id} callbk={this.newMetric}/>
+                <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} callbk={this.newMetric}
+                                projId={this.proj.id} metrics={this.state.metrics}/>
 
                 </Container>
             </div>
