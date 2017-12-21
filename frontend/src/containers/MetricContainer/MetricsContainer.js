@@ -20,7 +20,7 @@ class MetricsContainer extends Component {
                     ))}
                     <Route exact path="">
                         <div className="animated fadeIn">
-                            <MetricsList name="Metrics" projId={this.props.projId} metrics={
+                            <MetricsList name="Metrics" projId={this.props.projId} loading={this.props.loading} metrics={
                                 this.props.metrics.map(m => ({
                                     id: m.id,
                                     name: m.name,

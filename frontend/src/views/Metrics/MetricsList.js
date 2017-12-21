@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {Link} from "react-router-dom";
+import {SyncLoader} from "react-spinners";
 
 
 class MetricsList extends Component {
@@ -11,13 +12,16 @@ class MetricsList extends Component {
                     {this.props.name}
                 </div>
                 <div className="card-body">
+                    <div className="text-center">
+                        <SyncLoader loading={this.props.loading} color="#36D7B7" size={20} margin="10px"/>
+                    </div>
                     <table className="table table-striped">
                         <thead>
                         <TableHeaders metric={this.props.metrics[0]}/>
                         </thead>
                         <tbody>
                         {this.props.metrics.map((metric, idx) => (
-                            <tr key={idx}>
+                            <tr key={idx} className="animated fadeIn">
                                 <th scope="row">{idx + 1}</th>
                                 {Object.keys(metric)
                                     .filter(m => m !== "measurements")
@@ -45,7 +49,7 @@ class MetricsList extends Component {
 function TableHeaders(props) {
     if (props.metric) {
         return (
-            <tr>
+            <tr className="animated fadeIn">
                 <th>#</th>
                 {Object.keys(props.metric).map((field, idx) => (
                     <th key={idx}>{field}</th>

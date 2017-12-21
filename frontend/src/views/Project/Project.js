@@ -5,6 +5,7 @@ import MetricTile from "../Metrics/MetricTile";
 import {Button, Container} from 'reactstrap';
 import NewMetricModal from "./NewMetricModal";
 import MetricsContainer from "../../containers/MetricContainer/MetricsContainer";
+import {SyncLoader} from "react-spinners";
 
 class Project extends Component {
     constructor(props) {
@@ -13,6 +14,7 @@ class Project extends Component {
         this.state = {
             metrics: [],
             newMetricModal: true,
+            loading: false,
         };
 
         this.toggle = this.toggle.bind(this);
@@ -24,12 +26,14 @@ class Project extends Component {
         if (Number.isInteger(this.proj.id)) {
             url += '?project=' + this.proj.id;
         }
+        this.setState({loading: true});
         fetch(url, {credentials: "same-origin"})
             .then(results => results.json())
             .then(data => {
                 this.setState({
                     metrics: data.metrics,
-                })
+                    loading: false,
+                });
             });
     }
 
@@ -187,6 +191,10 @@ class Project extends Component {
                                 </div>
                             </div>
 
+                            <div className="text-center">
+                                <SyncLoader loading={this.state.loading} color="#36D7B7" size={20} margin="10px"/>
+                            </div>
+
                             <div className="row">
                                 {this.state.metrics.filter(metric => metric.type === 'C')
                                     .map(metric => (
@@ -206,7 +214,7 @@ class Project extends Component {
 
                 <Switch>
                     <Route path={"/project/" + this.proj.id + "/metric/"}>
-                        <MetricsContainer projId={this.proj.id} metrics={this.state.metrics}/>
+                        <MetricsContainer projId={this.proj.id} metrics={this.state.metrics} loading={this.state.loading}/>
                     </Route>
                 </Switch>
 
