@@ -10,13 +10,15 @@ class NewMetricModal extends Component {
             type: "C",
             filters: [],
             activities: [],
-            fields: []
+            fields: [],
+            groupbyOptions: [],
         };
 
         this.addFilter = this.addFilter.bind(this);
         this.formSubmit = this.formSubmit.bind(this);
         this.cancel = this.cancel.bind(this);
         this.changeActivity = this.changeActivity.bind(this);
+        this.changeGrouping = this.changeGrouping.bind(this);
     }
 
     componentDidMount() {
@@ -60,6 +62,27 @@ class NewMetricModal extends Component {
             fields = this.state.activities.find(a => a.name === activityName).fields;
         }
         this.setState({fields: fields});
+    }
+
+    changeGrouping(grouby) {
+        let groubyType = grouby.target.value;
+        let newState = {
+            groupbyOptions: []
+        };
+        if (groubyType) {
+            newState.groupbyOptions = [
+                {
+                    name: "Sum",
+                    value: "sum"
+                },
+                {
+                    name: "Count",
+                    value: "count"
+                },
+            ];
+        }
+        this.setState(newState);
+
     }
 
     getSubmitObj(type, e) {
@@ -108,7 +131,7 @@ class NewMetricModal extends Component {
             info: {
                 components: [], // list of metrics ids
                 aggregate: undefined, // operation for aggregation: 'minus', 'timeinter'
-                //groupby: undefined, // string, optionalsubmitObj.info.components[0].type
+                groupby: [], // string, optional
             }
         };
         // build POST body object
@@ -116,8 +139,10 @@ class NewMetricModal extends Component {
             if (e.target[i].name && e.target[i].value) {
                 if (e.target[i].name === "metric") {
                     submitObj.info.components.push(Number.parseInt(e.target[i].value));
-                } else if (e.target[i].name === "aggregate" || e.target[i].name === "groupby") {
+                } else if (e.target[i].name === "aggregate") {
                     submitObj.info[e.target[i].name] = e.target[i].value;
+                } else if (e.target[i].name === "groupby") {
+                    submitObj.info.groupby.push(e.target[i].value);
                 } else {
                     submitObj[e.target[i].name] = e.target[i].value;
                 }
@@ -219,7 +244,7 @@ class NewMetricModal extends Component {
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
-                                    {m.name + " (Type: " + (m.type === "R" ? "Raw": "Composite") + ")"}
+                                    {m.name + " (Type: " + (m.type === "R" ? "Raw" : "Composite") + ")"}
                                 </option>
                             ))}
                         </Input>
@@ -233,7 +258,7 @@ class NewMetricModal extends Component {
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
-                                    {m.name + " (Type: " + (m.type === "R" ? "Raw": "Composite") + ")"}
+                                    {m.name + " (Type: " + (m.type === "R" ? "Raw" : "Composite") + ")"}
                                 </option>
                             ))}
                         </Input>
@@ -249,6 +274,29 @@ class NewMetricModal extends Component {
                             <option value="timeinter">Time interval between UTC time values</option>
                         </Input>
                     </Col>
+                </FormGroup>),
+                (<FormGroup row key="groupby">
+                    <Label for="groupby" sm={3}>Group by</Label>
+                    <Col sm={5}>
+                        <Input type="select" name="groupby" id="groupbyType" onChange={this.changeGrouping}
+                               defaultValue="" required>
+                            <option value="">-- No grouping --</option>
+                            <option value="day">Day</option>
+                            <option value="3_days">3 days</option>
+                            <option value="7_days">7 days</option>
+                            <option value="30_days">30 days</option>
+                        </Input>
+                    </Col>
+                    {this.state.groupbyOptions.length ?
+                        (<Col sm={4}>
+                            <Input type="select" name="groupby" id="groupbyValue">
+                                {this.state.groupbyOptions.map((o, i) => (
+                                    <option value={o.value} key={i}>{o.name}</option>
+                                ))}
+                            </Input>
+                        </Col>) : null
+                    }
+
                 </FormGroup>),
             ];
         }
@@ -277,6 +325,7 @@ class NewMetricModal extends Component {
                                     </Input>
                                 </Col>
                             </FormGroup>
+                            <h4>Settings</h4>
                             {formInputs}
                         </ModalBody>
                         <ModalFooter>

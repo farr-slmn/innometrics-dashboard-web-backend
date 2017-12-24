@@ -151,41 +151,40 @@ class UserProjectMetrics(APIView):
 
                     activity_values.append(activity_value)
 
-                def group_by_day(activity_values, key_func, agg_func):
-                    by_day = defaultdict(int)
-                    for av in activity_values:
-                        timestamp_seconds = key_func(av)
-                        # d = dateutil.date.fromtimestamp()
-                        day = int(timestamp_seconds / (60 * 60 * 24)) * (60 * 60 * 24)
-                        if day:
-                            day = str(day)
-                            by_day[day] = agg_func(by_day[day], av['value'])
-                    return by_day
-
                 x_val = []
                 y_val = []
 
                 if groupby:
+                    # if groupby[1] == 'sum':
+                    agg_func = lambda a, b: a + b
+                    if groupby[1] == 'count':
+                        agg_func = lambda a, b: a + 1
+
+                    def get_timestamp_from_activity(activity_value):
+                        timestamp = 0
+                        for m in activity_value['source']:
+                            if m['name'] == 'connect time' or m['name'] == 'code begin time':
+                                timestamp = int(m['value']) / 1000  # without millis
+                            elif m['name'] == 'from':
+                                timestamp = dateutil.parser.parse(m['value'].upper()).timestamp()
+                        return int(timestamp)
+
+                    grouped = []
                     if groupby[0] == 'day':
-                        agg_func = lambda a, b: a + b
-
-                        def get_timestamp_from_activity(activity_value):
-                            timestamp = 0
-                            for m in activity_value['source']:
-                                if m['name'] == 'connect time':
-                                    timestamp = m['value'] / 1000  # without millis
-                                if m['name'] == 'from':
-                                    timestamp = dateutil.parser.parse(m['value'].upper()).timestamp()
-                            return int(timestamp)
-
                         grouped = group_by_day(activity_values, get_timestamp_from_activity, agg_func)
+                    elif groupby[0] == '3_days':
+                        grouped = group_by_3_days(activity_values, get_timestamp_from_activity, agg_func)
+                    elif groupby[0] == '7_days':
+                        grouped = group_by_7_days(activity_values, get_timestamp_from_activity, agg_func)
+                    elif groupby[0] == '30_days':
+                        grouped = group_by_30_days(activity_values, get_timestamp_from_activity, agg_func)
 
-                        grouped_items = list(grouped.items())
-                        grouped_items.sort(key=lambda x: x[0])  # sort by time
+                    grouped_items = list(grouped.items())
+                    grouped_items.sort(key=lambda x: x[0])  # sort by time
 
-                        for seconds, value in grouped_items:
-                            x_val.append(str(date.fromtimestamp(int(seconds))))
-                            y_val.append(value)
+                    for seconds, value in grouped_items:
+                        x_val.append(str(date.fromtimestamp(int(seconds))))
+                        y_val.append(value)
                 else:
                     activity_values.sort(key=lambda x: x['source'][0]['id'])
                     y_val = list(map(lambda x: x['value'], activity_values))
@@ -200,6 +199,7 @@ class UserProjectMetrics(APIView):
                 y_val_0 = components[0]['y_values']
                 y_val_1 = components[1]['y_values']
 
+                # TODO merge by x values
                 x_val_0 = components[0]['x_values']
 
                 y_val = []
@@ -227,3 +227,37 @@ class UserProjectMetrics(APIView):
                     metric_data['value'] = y_val[-1]
 
         return metric_data
+
+
+def group_by_interval(activity_values, key_func, agg_func, interval, shift=False):
+    by_day = defaultdict(int)
+    if activity_values and shift:
+        last_val = max(map(key_func, activity_values))
+        shift = last_val - int(last_val / interval) * interval + 1
+    for av in activity_values:
+        timestamp_seconds = key_func(av)
+        # d = dateutil.date.fromtimestamp()
+        period_start = (timestamp_seconds - shift) / interval
+        if shift:
+            period_start = period_start + 1
+        day = int(period_start) * interval + shift
+        if day:
+            day = str(day)
+            by_day[day] = agg_func(by_day[day], av['value'])
+    return by_day
+
+
+def group_by_day(activity_values, key_func, agg_func):
+    return group_by_interval(activity_values, key_func, agg_func, interval=60 * 60 * 24)
+
+
+def group_by_3_days(activity_values, key_func, agg_func):
+    return group_by_interval(activity_values, key_func, agg_func, interval=3 * 60 * 60 * 24, shift=True)
+
+
+def group_by_7_days(activity_values, key_func, agg_func):
+    return group_by_interval(activity_values, key_func, agg_func, interval=7 * 60 * 60 * 24, shift=True)
+
+
+def group_by_30_days(activity_values, key_func, agg_func):
+    return group_by_interval(activity_values, key_func, agg_func, interval=30 * 60 * 60 * 24, shift=True)
