@@ -107,17 +107,20 @@ class UserProjectMetrics(APIView):
             groupby = metric.info.get('groupby', None)
 
             # TODO more than two components
+            # find metrics if they already retrieved, otherwise put ids
             components = [
-                next(filter(lambda metric: metric['id'] == component_ids[0], result_list), component_ids[0]),
-                next(filter(lambda metric: metric['id'] == component_ids[1], result_list), component_ids[1])
+                next((m for m in result_list if m['id'] == component_ids[0]), component_ids[0]),
+                next((m for m in result_list if m['id'] == component_ids[1]), component_ids[1])
             ]
 
             def retrieve(mtc):
+                if type(mtc) is int:
+                    mtc = next((m for m in result_list if m['id'] == mtc), mtc)
+                # retrieve metric if mtc is id
                 return self.retrieve_metric_data(mtc, participation, result_list) if type(mtc) is int else mtc
 
             components = list(map(retrieve, components))
-            # TODO leave only needed components info (e.g. id, name, value)
-            metric_data['components'] = components
+            metric_data['components'] = component_ids
 
             if components[0]['type'] == 'R':
 

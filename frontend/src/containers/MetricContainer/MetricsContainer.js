@@ -14,7 +14,7 @@ class MetricsContainer extends Component {
                         <Route key={"metric_" + metric.id}
                                path={"/project/" + this.props.projId + "/metric/" + metric.id}>
                             <div className="animated fadeIn">
-                                <MetricContainer metric={metric} projId={this.props.projId}/>
+                                <MetricContainer metric={metric} metrics={this.props.metrics} projId={this.props.projId}/>
                             </div>
                         </Route>
                     ))}
@@ -25,6 +25,7 @@ class MetricsContainer extends Component {
                                     id: m.id,
                                     name: m.name,
                                     type: m.type === "C" ? "Composite" : "Raw",
+                                    // TODO json pretty view
                                     info: JSON.stringify(m.info),
                                 }))
                             }/>

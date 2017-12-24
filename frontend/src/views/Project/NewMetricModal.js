@@ -62,14 +62,14 @@ class NewMetricModal extends Component {
         this.setState({fields: fields});
     }
 
-    static getSubmitObj(type, e) {
+    getSubmitObj(type, e) {
         if (type === "R") {
-            return NewMetricModal.rawMetricSubmitObj(e);
+            return this.rawMetricSubmitObj(e);
         }
-        return NewMetricModal.compositeMetricSubmitObj(e);
+        return this.compositeMetricSubmitObj(e);
     }
 
-    static rawMetricSubmitObj(e) {
+    rawMetricSubmitObj(e) {
         // raw metric structure
         let submitObj = {
             name: undefined, // string
@@ -100,7 +100,7 @@ class NewMetricModal extends Component {
         return submitObj;
     }
 
-    static compositeMetricSubmitObj(e) {
+    compositeMetricSubmitObj(e) {
         // composite metric structure
         let submitObj = {
             name: undefined, // string
@@ -108,13 +108,14 @@ class NewMetricModal extends Component {
             info: {
                 components: [], // list of metrics ids
                 aggregate: undefined, // operation for aggregation: 'minus', 'timeinter'
+                //groupby: undefined, // string, optionalsubmitObj.info.components[0].type
             }
         };
         // build POST body object
         for (let i = 0; i < e.target.length; i++) {
             if (e.target[i].name && e.target[i].value) {
                 if (e.target[i].name === "metric") {
-                    submitObj.info.components.push(e.target[i].value);
+                    submitObj.info.components.push(Number.parseInt(e.target[i].value));
                 } else if (e.target[i].name === "aggregate" || e.target[i].name === "groupby") {
                     submitObj.info[e.target[i].name] = e.target[i].value;
                 } else {
@@ -122,12 +123,18 @@ class NewMetricModal extends Component {
                 }
             }
         }
+        let type1 = this.props.metrics.find(m => m.id === submitObj.info.components[0]).type;
+        let type2 = this.props.metrics.find(m => m.id === submitObj.info.components[1]).type;
+        if (type1 !== type2) {
+            // TODO inform user - verification failed
+            return null;
+        }
         return submitObj;
     }
 
     formSubmit(e) {
         e.preventDefault();
-        let submitObj = NewMetricModal.getSubmitObj(this.state.type, e);
+        let submitObj = this.getSubmitObj(this.state.type, e);
         console.log(submitObj);
 
         // create metric request
@@ -211,7 +218,10 @@ class NewMetricModal extends Component {
                                required defaultValue="">
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
-                                <option key={i} value={m.id}>{m.name}</option>))}
+                                <option key={i} value={m.id}>
+                                    {m.name + " (Type: " + (m.type === "R" ? "Raw": "Composite") + ")"}
+                                </option>
+                            ))}
                         </Input>
                     </Col>
                 </FormGroup>),
@@ -222,7 +232,10 @@ class NewMetricModal extends Component {
                                required defaultValue="">
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
-                                <option key={i} value={m.id}>{m.name}</option>))}
+                                <option key={i} value={m.id}>
+                                    {m.name + " (Type: " + (m.type === "R" ? "Raw": "Composite") + ")"}
+                                </option>
+                            ))}
                         </Input>
                     </Col>
                 </FormGroup>),
