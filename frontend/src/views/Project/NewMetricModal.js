@@ -11,7 +11,19 @@ class NewMetricModal extends Component {
             filters: [],
             activities: [],
             fields: [],
-            groupbyOptions: [],
+            showGroupby: false,
+            grouping: false,
+            groupbyTimeFields: [[], []],
+            groupbyFunctions: [
+                {
+                    name: "Sum",
+                    value: "sum"
+                },
+                {
+                    name: "Count",
+                    value: "count"
+                },
+            ],
         };
 
         this.addFilter = this.addFilter.bind(this);
@@ -38,7 +50,7 @@ class NewMetricModal extends Component {
         let filters = this.state.filters;
         let newId = filters.length;
         filters.push((
-            <FormGroup row key={"f_" + newId}>
+            <FormGroup row key={"f_" + newId} className="animated fadeIn">
                 <Label for={"filter" + newId} sm={3}>Filter {newId + 1}</Label>
                 <Col sm={4}>
                     <Input type="select" name="filterType" id={"filter" + newId + "type"} onChange={this.changeFilter}>
@@ -64,25 +76,26 @@ class NewMetricModal extends Component {
         this.setState({fields: fields});
     }
 
-    changeGrouping(grouby) {
-        let groubyType = grouby.target.value;
+    changeMetric(idx, metric) {
         let newState = {
-            groupbyOptions: []
+            groupbyTimeFields: this.state.groupbyTimeFields,
         };
-        if (groubyType) {
-            newState.groupbyOptions = [
-                {
-                    name: "Sum",
-                    value: "sum"
-                },
-                {
-                    name: "Count",
-                    value: "count"
-                },
-            ];
+        newState.groupbyTimeFields[idx] = [];
+        let metricId = metric.target.value;
+        if (metricId || (metricId == 0)) {
+            let m = this.props.metrics.find(m => m.id == metricId);
+            if (m && (m.type === "R")) {
+                newState.groupbyTimeFields[idx] = m.fields;
+            }
         }
+        newState.showGroupby = Boolean(newState.groupbyTimeFields[0].length) && Boolean(newState.groupbyTimeFields[1].length);
         this.setState(newState);
+    }
 
+    changeGrouping(grouby) {
+        this.setState({
+            grouping: Boolean(grouby.target.value)
+        });
     }
 
     getSubmitObj(type, e) {
@@ -131,7 +144,7 @@ class NewMetricModal extends Component {
             info: {
                 components: [], // list of metrics ids
                 aggregate: undefined, // operation for aggregation: 'minus', 'timeinter'
-                groupby: [], // string, optional
+                groupby: {}, // dict of groping properties: 'group_type', 'group_func', 'group_timefield' (can be empty)
             }
         };
         // build POST body object
@@ -141,8 +154,8 @@ class NewMetricModal extends Component {
                     submitObj.info.components.push(Number.parseInt(e.target[i].value));
                 } else if (e.target[i].name === "aggregate") {
                     submitObj.info[e.target[i].name] = e.target[i].value;
-                } else if (e.target[i].name === "groupby") {
-                    submitObj.info.groupby.push(e.target[i].value);
+                } else if (e.target[i].name.startsWith("group_")) {
+                    submitObj.info.groupby[e.target[i].name] = e.target[i].value;
                 } else {
                     submitObj[e.target[i].name] = e.target[i].value;
                 }
@@ -190,6 +203,8 @@ class NewMetricModal extends Component {
         this.setState({
             filters: [],
             fields: [],
+            showGroupby: false,
+            groupbyTimeFields: [[], []],
         });
         this.props.toggle();
     }
@@ -198,7 +213,7 @@ class NewMetricModal extends Component {
         let formInputs;
         if (this.state.type === "R") {
             formInputs = [
-                (<FormGroup row key="activity">
+                (<FormGroup row key="activity" className="animated fadeIn">
                     <Label for="activity" sm={3}>Activity</Label>
                     <Col sm={9}>
                         <Input type="select" name="activity" id="activity"
@@ -210,7 +225,7 @@ class NewMetricModal extends Component {
                     </Col>
                 </FormGroup>),
 
-                (<FormGroup row key="field">
+                (<FormGroup row key="field" className="animated fadeIn">
                     <Label for="field" sm={3}>Activity field</Label>
                     <Col sm={9}>
                         {this.state.fields.length ?
@@ -225,22 +240,22 @@ class NewMetricModal extends Component {
                     </Col>
                 </FormGroup>),
 
-                (<FormGroup key="filters">
+                (<FormGroup key="filters" className="animated fadeIn">
                     <h5>Filters</h5>
                     {this.state.filters}
                 </FormGroup>),
 
-                (<Button key="addFilter" color="link" onClick={this.addFilter}>
+                (<Button key="addFilter" color="link" onClick={this.addFilter} className="animated fadeIn">
                     <i className="icon-plus"/> Add filter
                 </Button>),
             ];
         } else {
             formInputs = [
-                (<FormGroup row key="metric1">
+                (<FormGroup row key="metric1" className="animated fadeIn">
                     <Label for="metric1" sm={3}>Metric 1</Label>
                     <Col sm={9}>
                         <Input type="select" name="metric" id="metric1"
-                               required defaultValue="">
+                               required defaultValue="" onChange={this.changeMetric.bind(this, 0)}>
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
@@ -250,11 +265,11 @@ class NewMetricModal extends Component {
                         </Input>
                     </Col>
                 </FormGroup>),
-                (<FormGroup row key="metric2">
+                (<FormGroup row key="metric2" className="animated fadeIn">
                     <Label for="metric2" sm={3}>Metric 2</Label>
                     <Col sm={9}>
                         <Input type="select" name="metric" id="metric2"
-                               required defaultValue="">
+                               required defaultValue="" onChange={this.changeMetric.bind(this, 1)}>
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
@@ -264,7 +279,7 @@ class NewMetricModal extends Component {
                         </Input>
                     </Col>
                 </FormGroup>),
-                (<FormGroup row key="aggregate">
+                (<FormGroup row key="aggregate" className="animated fadeIn">
                     <Label for="aggregate" sm={3}>Operation</Label>
                     <Col sm={9}>
                         <Input type="select" name="aggregate" id="aggregate"
@@ -275,35 +290,48 @@ class NewMetricModal extends Component {
                         </Input>
                     </Col>
                 </FormGroup>),
-                (<FormGroup row key="groupby">
-                    <Label for="groupby" sm={3}>Group by</Label>
-                    <Col sm={5}>
-                        <Input type="select" name="groupby" id="groupbyType" onChange={this.changeGrouping}
-                               defaultValue="" required>
-                            <option value="">-- No grouping --</option>
-                            <option value="day">Day</option>
-                            <option value="3_days">3 days</option>
-                            <option value="7_days">7 days</option>
-                            <option value="30_days">30 days</option>
-                        </Input>
-                    </Col>
-                    {this.state.groupbyOptions.length ?
-                        (<Col sm={4}>
-                            <Input type="select" name="groupby" id="groupbyValue">
-                                {this.state.groupbyOptions.map((o, i) => (
-                                    <option value={o.value} key={i}>{o.name}</option>
-                                ))}
-                            </Input>
-                        </Col>) : null
-                    }
-
-                </FormGroup>),
             ];
+            if (this.state.showGroupby) {
+                formInputs.push((
+                    <FormGroup row key="groupby" className="animated fadeIn">
+                        <Label for="group_type" sm={3}>Group by</Label>
+                        <Col sm={3}>
+                            <Input type="select" name="group_type" id="groupbyType" onChange={this.changeGrouping}
+                                   defaultValue="">
+                                <option value="">-- No grouping --</option>
+                                <option value="day">Day</option>
+                                <option value="3_days">3 days</option>
+                                <option value="7_days">7 days</option>
+                                <option value="30_days">30 days</option>
+                            </Input>
+                        </Col>
+                        {this.state.grouping ? [
+                            (<Col sm={2} key="group_func" className="animated fadeIn">
+                                <Input type="select" name="group_func" id="groupbyFunc" required>
+                                    {this.state.groupbyFunctions.map((o, i) => (
+                                        <option value={o.value} key={i}>{o.name}</option>
+                                    ))}
+                                </Input>
+                            </Col>),
+                            (<Col sm={4} key="group_timefield" className="animated fadeIn">
+                                <Input type="select" name="group_timefield" id="groupbyTimeField" default="" required>
+                                    <option value="">-- Choose time field --</option>
+                                    {Array.from(
+                                        new Set(this.state.groupbyTimeFields[0].concat(this.state.groupbyTimeFields[1]))
+                                    ).map((f, i) => (
+                                        <option value={f} key={i}>{f}</option>
+                                    ))}
+                                </Input>
+                            </Col>)] : null
+                        }
+                    </FormGroup>
+                ));
+            }
         }
 
         return (
             <div>
-                <Modal isOpen={this.props.newMetricModal} toggle={this.cancel} backdrop="static">
+                <Modal isOpen={this.props.newMetricModal} toggle={this.cancel} backdrop="static" className="modal-lg">
                     <Form onSubmit={this.formSubmit}>
                         <ModalHeader toggle={this.cancel}>New Metric</ModalHeader>
                         <ModalBody>

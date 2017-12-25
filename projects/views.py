@@ -79,7 +79,7 @@ class UserProjectMetrics(APIView):
 
         if metric.type == Metric.RAW:
             measurement_field = metric.info['field']
-            measurements = Measurement.objects.filter(activity__participation=participation, name=measurement_field)
+            measurements = Measurement.objects.filter(activity__participation=participation)
 
             activity_name = metric.info.get('activity', None)
             if activity_name:
@@ -98,6 +98,10 @@ class UserProjectMetrics(APIView):
             field_to = metric.info['filters'].get('field_to', None)
             if field_to:
                 measurements = measurements.filter(value__lte=field_to)
+
+            metric_data['fields'] = list(field[0] for field in set(measurements.values_list("name").distinct()))
+
+            measurements = measurements.filter(name=measurement_field)
 
             metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
 
@@ -157,26 +161,33 @@ class UserProjectMetrics(APIView):
                 if groupby:
                     # if groupby[1] == 'sum':
                     agg_func = lambda a, b: a + b
-                    if groupby[1] == 'count':
+                    if groupby['group_func'] == 'count':
                         agg_func = lambda a, b: a + 1
 
                     def get_timestamp_from_activity(activity_value):
                         timestamp = 0
+                        # TODO for any field of an activity
                         for m in activity_value['source']:
-                            if m['name'] == 'connect time' or m['name'] == 'code begin time':
-                                timestamp = int(m['value']) / 1000  # without millis
-                            elif m['name'] == 'from':
-                                timestamp = dateutil.parser.parse(m['value'].upper()).timestamp()
+                            if m['name'] == groupby['group_timefield']:
+                                if m['type'] == "long":
+                                    timestamp = int(m['value']) / 1000  # without millis
+                                elif m['type'] == "datetime":
+                                    timestamp = dateutil.parser.parse(m['value'].upper()).timestamp()
+                                break
+                                # if m['name'] == 'connect time' or m['name'] == 'code begin time':
+                                #
+                                # elif m['name'] == 'from':
+
                         return int(timestamp)
 
                     grouped = []
-                    if groupby[0] == 'day':
+                    if groupby['group_type'] == 'day':
                         grouped = group_by_day(activity_values, get_timestamp_from_activity, agg_func)
-                    elif groupby[0] == '3_days':
+                    elif groupby['group_type'] == '3_days':
                         grouped = group_by_3_days(activity_values, get_timestamp_from_activity, agg_func)
-                    elif groupby[0] == '7_days':
+                    elif groupby['group_type'] == '7_days':
                         grouped = group_by_7_days(activity_values, get_timestamp_from_activity, agg_func)
-                    elif groupby[0] == '30_days':
+                    elif groupby['group_type'] == '30_days':
                         grouped = group_by_30_days(activity_values, get_timestamp_from_activity, agg_func)
 
                     grouped_items = list(grouped.items())
