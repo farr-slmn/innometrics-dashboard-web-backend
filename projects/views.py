@@ -11,11 +11,20 @@ from projects.services import retrieve_metrics, retrieve_metric
 
 class ProjectList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the projects
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Project.objects.filter(participations__user=user)
 
 
 class ProjectActivitiesAutocomlete(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def get(self, request):
         project_id = request.GET.get('project', None)
         participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
@@ -31,7 +40,7 @@ class ProjectActivitiesAutocomlete(APIView):
 
 
 class UserProjectMetrics(APIView):
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def put(self, request):
         project_id = request.GET.get('project', None)
