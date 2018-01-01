@@ -57,6 +57,7 @@ def retrieve_metric_data(metric, participation, result_list):
             measurements = measurements.filter(value__lte=field_to)
 
         metric_data['fields'] = list(field[0] for field in set(measurements.values_list("name").distinct()))
+        metric_data['fields'].sort()
 
         measurements = measurements.filter(name=measurement_field)
 
