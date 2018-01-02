@@ -196,7 +196,7 @@ class NewMetricModal extends Component {
                 this.props.callbk(data['metrics']);
             });
 
-        this.props.toggle();
+        this.cancel();
     }
 
     cancel() {

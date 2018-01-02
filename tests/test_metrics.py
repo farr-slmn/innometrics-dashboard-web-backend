@@ -126,3 +126,44 @@ class MetricTestCase(TransactionTestCase):
         response = self.client.get("/projects/metrics/")
         self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(str(response.content, encoding='utf8'), metrics_response)
+
+    def test_inaccessible_composite_metrics(self):
+        self.client.login(username='test_user_1', password='test_password')
+        metric_json = {
+            "name": "metric_1",
+            "type": "R",
+            "info": {
+                "field": "m_begin",
+                "filters": {}
+            }
+        }
+        response = self.client.put('/projects/metrics/', content_type='application/json', data=json.dumps(metric_json))
+        self.assertEqual(response.status_code, 201)
+
+        composite_metric_json = {
+            "name": "metric_2",
+            "type": "C",
+            "info": {
+                "aggregate": "minus",
+                "components": [1, 1],
+                "groupby": {}
+            }
+        }
+
+        response = self.client.put('/projects/metrics/', content_type='application/json', data=json.dumps(composite_metric_json))
+        self.assertEqual(response.status_code, 201)
+
+        composite_metric_json = {
+            "name": "metric_3",
+            "type": "C",
+            "info": {
+                "aggregate": "minus",
+                "components": [10, 1],
+                "groupby": {}
+            }
+        }
+
+        response = self.client.put('/projects/metrics/', content_type='application/json',
+                                   data=json.dumps(composite_metric_json))
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(str(response.content, encoding='utf8'), {"info": {"components": ["inaccessible components "]}})
