@@ -25,6 +25,7 @@ class NewMetricModal extends Component {
                 },
             ],
         };
+        this.filterCounter = 0;
 
         this.addFilter = this.addFilter.bind(this);
         this.formSubmit = this.formSubmit.bind(this);
@@ -48,22 +49,32 @@ class NewMetricModal extends Component {
 
     addFilter() {
         let filters = this.state.filters;
-        let newId = filters.length;
+        let newId = "f_" + (this.filterCounter++);
         filters.push((
-            <FormGroup row key={"f_" + newId} className="animated fadeIn">
-                <Label for={"filter" + newId} sm={3}>Filter {newId + 1}</Label>
+            <FormGroup row key={newId} id={newId} className="animated fadeIn">
+                <Col sm={3}>
+                    <Label for={"filter_" + newId}>Filter {this.filterCounter} </Label>
+                    <Button color="link" onClick={this.removeFilter.bind(this, newId)}>
+                        <i className="icon-close"/>
+                    </Button>
+                </Col>
                 <Col sm={4}>
-                    <Input type="select" name="filterType" id={"filter" + newId + "type"} onChange={this.changeFilter}>
-                        <option value="group">Group</option>
+                    <Input type="select" name="filterType" id={"filter_" + newId + "type"} onChange={this.changeFilter}>
                         <option value="field_from">Value >= than</option>
                         <option value="field_to">Value {"<="} than</option>
+                        <option value="group" disabled>Group</option>
                     </Input>
                 </Col>
                 <Col sm={5}>
-                    <Input type="text" name="filter" id={"filter" + newId} onChange={this.changeField}/>
+                    <Input type="text" name="filter" id={"filter_" + newId} onChange={this.changeField}/>
                 </Col>
             </FormGroup>
         ));
+        this.setState({filters: filters});
+    }
+
+    removeFilter(id) {
+        let filters = this.state.filters.filter(e => e.props.id !== id);
         this.setState({filters: filters});
     }
 
@@ -207,6 +218,7 @@ class NewMetricModal extends Component {
             groupbyTimeFields: [[], []],
         });
         this.props.toggle();
+        this.filterCounter = 0;
     }
 
     render() {
