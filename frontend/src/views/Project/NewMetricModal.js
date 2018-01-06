@@ -1,5 +1,18 @@
 import React, {Component} from 'react';
-import {Button, Col, Form, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader} from "reactstrap";
+import {
+    Button,
+    Col,
+    Collapse,
+    Form,
+    FormGroup,
+    Input,
+    Label,
+    Modal,
+    ModalBody,
+    ModalFooter,
+    ModalHeader,
+    Row
+} from "reactstrap";
 import cookie from 'react-cookie';
 
 class NewMetricModal extends Component {
@@ -24,6 +37,7 @@ class NewMetricModal extends Component {
                     value: "count"
                 },
             ],
+            toggle: {},
         };
         this.filterCounter = 0;
 
@@ -216,9 +230,38 @@ class NewMetricModal extends Component {
             fields: [],
             showGroupby: false,
             groupbyTimeFields: [[], []],
+            toggle: {},
         });
         this.props.toggle();
         this.filterCounter = 0;
+    }
+
+    createDescriptionRow(contentComponent, toggleField, key) {
+        return (
+            <Row key={key}>
+                <Col sm={3}></Col>
+                <Col sm={8}>
+                    <Collapse isOpen={this.state.toggle[toggleField]}>
+                        {contentComponent}
+                    </Collapse>
+                </Col>
+            </Row>
+        );
+    }
+
+    createDescriptionButton(toggleField, id) {
+        return (
+            <Button id={id}
+                    color="info"
+                    onClick={() => {
+                        let newToggle = this.state.toggle;
+                        newToggle[toggleField] = !newToggle[toggleField];
+                        this.setState({toggle: newToggle});
+                    }}
+                    active={this.state.toggle[toggleField]}>
+                <i className="icon-info"/>
+            </Button>
+        );
     }
 
     render() {
@@ -227,7 +270,7 @@ class NewMetricModal extends Component {
             formInputs = [
                 (<FormGroup row key="activity" className="animated fadeIn">
                     <Label for="activity" sm={3}>Activity</Label>
-                    <Col sm={9}>
+                    <Col sm={8}>
                         <Input type="select" name="activity" id="activity"
                                onChange={this.changeActivity} defaultValue="">
                             <option value="">-- Select an activity (optional) --</option>
@@ -235,11 +278,18 @@ class NewMetricModal extends Component {
                                 <option key={i} value={a.name}>{a.name}</option>))}
                         </Input>
                     </Col>
+                    {this.createDescriptionButton("activity", "activityDescriptionButton")}
                 </FormGroup>),
 
+                this.createDescriptionRow((
+                    <div style={{"marginBottom": "1em"}}>
+                        Selecting an <code>Activity</code> you can filter collected measurements
+                        according to specified activity name. All activities will be chosen by default.
+                    </div>), "activity", "activityDescription"),
+
                 (<FormGroup row key="field" className="animated fadeIn">
-                    <Label for="field" sm={3}>Activity field</Label>
-                    <Col sm={9}>
+                    <Label for="field" sm={3}>Activity property</Label>
+                    <Col sm={8}>
                         {this.state.fields.length ?
                             (<Input type="select" name="field" id="metricField" defaultValue="" required>
                                 <option value="" disabled>Please select an item</option>
@@ -250,10 +300,25 @@ class NewMetricModal extends Component {
                                     required/>)
                         }
                     </Col>
+                    {this.createDescriptionButton("metricField", "metricFieldDescriptionButton")}
                 </FormGroup>),
 
+                this.createDescriptionRow((
+                    <div style={{"marginBottom": "1em"}}>
+                        Selecting or entering an <code>Activity property</code> you can filter collected measurements
+                        according to specified activity property name.
+                    </div>), "metricField", "metricFieldDescription"),
+
                 (<FormGroup key="filters" className="animated fadeIn">
-                    <h5>Filters</h5>
+                    <Row>
+                        <Col sm={3} tag="h5">Filters</Col>
+                        <Col sm={8}></Col>
+                        {this.createDescriptionButton("filters", "filtersDescriptionButton")}
+                    </Row>
+                    {this.createDescriptionRow((
+                        <div style={{"marginBottom": "1em"}}>
+                            Additional filters for measurements (e.g. top or bottom limits of a property value)
+                        </div>), "filters", "filtersDescription")}
                     {this.state.filters}
                 </FormGroup>),
 
@@ -354,9 +419,10 @@ class NewMetricModal extends Component {
                                            placeholder="Please enter a metric name"/>
                                 </Col>
                             </FormGroup>
+
                             <FormGroup row>
                                 <Label for="metricType" sm={3}>Metric type</Label>
-                                <Col sm={9}>
+                                <Col sm={8}>
                                     <Input type="select" name="type" id="metricType"
                                            onChange={e => this.setState({type: e.target.value})}
                                            defaultValue={this.state.type}>
@@ -364,7 +430,17 @@ class NewMetricModal extends Component {
                                         <option value="C">Composite</option>
                                     </Input>
                                 </Col>
+                                {this.createDescriptionButton("metricType", "metricTypeDescriptionButton")}
                             </FormGroup>
+
+                            {this.createDescriptionRow((
+                                <div>
+                                    <code>Raw</code> metric type is filtered measurements of
+                                    collected data that can be represented in table view. <br/>
+                                    <code>Composite</code> metric type consists of two metrics of Raw type aggregated
+                                    by some operation and can be represented in chart view and as tiles.
+                                </div>), "metricType", "metricTypeDescription")}
+
                             <h4>Settings</h4>
                             {formInputs}
                         </ModalBody>

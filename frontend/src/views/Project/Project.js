@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import Members from '../Members/Members'
 import {NavLink, Redirect, Route, Switch} from "react-router-dom";
 import MetricTile from "../Metrics/MetricTile";
-import {Button, Container} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import NewMetricModal from "./NewMetricModal";
 import MetricsContainer from "../../containers/MetricContainer/MetricsContainer";
 import {SyncLoader} from "react-spinners";
@@ -195,19 +195,19 @@ class Project extends Component {
                                 <SyncLoader loading={this.state.loading} color="#36D7B7" size={20} margin="10px"/>
                             </div>
 
-                            <div className="row">
+                            <Row>
                                 {this.state.metrics.filter(metric => metric.type === 'C')
                                     .map(metric => (
-                                        <div className="col-12 col-sm-3 col-md-2 animated fadeIn" key={metric.id}>
+                                        <Col xs={12} sm={3} md={2} className="animated fadeIn" key={metric.id}>
                                             <MetricTile trend="neutral"
                                                         projectId={this.proj.id}
                                                         id={metric.id}
                                                         name={metric.name}
                                                         value={metric.value}/>
-                                        </div>
+                                        </Col>
                                     ))
                                 }
-                            </div>
+                            </Row>
                         </div>
                     </Route>
                 </Switch>
