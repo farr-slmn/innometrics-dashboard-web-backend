@@ -49,13 +49,6 @@ class UserProjectMetrics(APIView):
         request.data['participation'] = participation.id
         serializer = MetricSerializer(data=request.data)
         if serializer.is_valid():
-            if serializer.validated_data['type'] == 'C':
-                components = serializer.validated_data['info']['components']
-                available = set(
-                    Metric.objects.filter(id__in=components, participation=participation).values_list('id', flat=True))
-                if (not components) or (len(components) != 2) or (not set(components).issubset(available)):
-                    return JsonResponse({"info": {"components": ["inaccessible components "]}},
-                                        status=status.HTTP_400_BAD_REQUEST)
             new_metric = serializer.save()
             metrics = retrieve_metric(new_metric, participation, [])
             return JsonResponse({'metrics': list(metrics)}, status=status.HTTP_201_CREATED)
