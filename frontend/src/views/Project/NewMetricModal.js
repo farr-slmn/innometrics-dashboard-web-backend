@@ -198,7 +198,6 @@ class NewMetricModal extends Component {
     formSubmit(e) {
         e.preventDefault();
         let submitObj = this.getSubmitObj(this.state.type, e);
-        console.log(submitObj);
 
         // create metric request
         let url = '/projects/metrics/';
@@ -217,7 +216,6 @@ class NewMetricModal extends Component {
         })
             .then(results => results.json())
             .then(data => {
-                console.log(data);
                 this.props.callbk(data['metrics']);
             });
 
@@ -336,12 +334,13 @@ class NewMetricModal extends Component {
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
-                                    {m.name + " (Type: " + (m.type === "R" ? "Raw" : "Composite") + ")"}
+                                    {"[" + (m.type === "R" ? "Raw" : "Composite") + "]: " + m.name}
                                 </option>
                             ))}
                         </Input>
                     </Col>
                 </FormGroup>),
+
                 (<FormGroup row key="metric2" className="animated fadeIn">
                     <Label for="metric2" sm={3}>Metric 2</Label>
                     <Col sm={9}>
@@ -350,12 +349,13 @@ class NewMetricModal extends Component {
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
-                                    {m.name + " (Type: " + (m.type === "R" ? "Raw" : "Composite") + ")"}
+                                    {"[" + (m.type === "R" ? "Raw" : "Composite") + "]: " + m.name}
                                 </option>
                             ))}
                         </Input>
                     </Col>
                 </FormGroup>),
+
                 (<FormGroup row key="aggregate" className="animated fadeIn">
                     <Label for="aggregate" sm={3}>Operation</Label>
                     <Col sm={9}>

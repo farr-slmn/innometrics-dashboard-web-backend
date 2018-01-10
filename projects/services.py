@@ -43,8 +43,8 @@ def retrieve_metric_data(metric, participation, result_list):
 
 def retrieve_raw_metric_data(metric, participation, metric_data):
     measurement_field = metric.info['field']
-    # measurements = Measurement.objects.filter(activity__participation=participation)
-    measurements = Measurement.objects.filter(name=measurement_field, activity__participation=participation)
+    measurements = Measurement.objects.filter(activity__participation=participation)
+    # measurements = Measurement.objects.filter(name=measurement_field, activity__participation=participation)
 
     activity_name = metric.info.get('activity', None)
     if activity_name:
@@ -63,10 +63,10 @@ def retrieve_raw_metric_data(metric, participation, metric_data):
         measurements = measurements.filter(value__lte=field_to)
 
     # list of properties names for filtered activities
-    # metric_data['fields'] = list(field[0] for field in set(measurements.values_list("name").distinct()))
-    # metric_data['fields'].sort()
+    metric_data['fields'] = list(field[0] for field in set(measurements.values_list("name").distinct()))
+    metric_data['fields'].sort()
 
-    # measurements = measurements.filter(name=measurement_field)
+    measurements = measurements.filter(name=measurement_field)
 
     metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
 
