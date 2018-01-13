@@ -43,16 +43,9 @@ class Project extends Component {
         });
     }
 
-    newMetric(metrics) {
+    newMetric(metric) {
         let mergedMetrics = this.state.metrics;
-        for (let i = 0; i < metrics.length; i++) {
-            let idx = mergedMetrics.findIndex(el => metrics[i].id === el.id);
-            if (idx >= 0) {
-                mergedMetrics[idx] = metrics[i];
-            } else {
-                mergedMetrics.push(metrics[i]);
-            }
-        }
+        mergedMetrics.push(metric);
         this.setState({
             metrics: mergedMetrics,
         });

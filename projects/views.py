@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404, HttpResponseForbidden
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 
@@ -6,7 +6,8 @@ from activities.models import Entity
 from measurements.models import Measurement
 from projects.models import Project, UserParticipation, Metric
 from projects.serializers import ProjectSerializer, MetricSerializer
-from projects.services import retrieve_metrics, retrieve_metric
+from projects.services import retrieve_current_metrics, retrieve_metric_data, \
+    retrieve_current_metric_data
 
 
 class ProjectList(generics.ListAPIView):
@@ -22,7 +23,7 @@ class ProjectList(generics.ListAPIView):
         return Project.objects.filter(participations__user=user)
 
 
-class ProjectActivitiesAutocomlete(APIView):
+class ProjectActivitiesAutocomplete(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
@@ -50,13 +51,34 @@ class UserProjectMetrics(APIView):
         serializer = MetricSerializer(data=request.data)
         if serializer.is_valid():
             new_metric = serializer.save()
-            metrics = retrieve_metric(new_metric, participation, [])
-            return JsonResponse({'metrics': list(metrics)}, status=status.HTTP_201_CREATED)
+            metric = retrieve_current_metric_data(new_metric, participation, [])
+            return JsonResponse(metric, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
         project_id = request.GET.get('project', None)
         participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
-        result = retrieve_metrics(participation)
+        result = retrieve_current_metrics(participation)
 
         return JsonResponse({'metrics': list(result)})
+
+
+class MetricsData(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self, pk):
+        try:
+            return Metric.objects.get(pk=pk)
+        except Metric.DoesNotExist:
+            return Http404()
+
+    def get(self, request, pk):
+        project_id = request.GET.get('project', None)
+        metric = self.get_object(pk)
+        participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
+
+        if metric.participation_id != participation.id:
+            return HttpResponseForbidden()
+
+        result = retrieve_metric_data(metric, participation, [])
+        return JsonResponse(result)

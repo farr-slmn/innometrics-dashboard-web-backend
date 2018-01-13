@@ -215,9 +215,7 @@ class NewMetricModal extends Component {
             body: JSON.stringify(submitObj)
         })
             .then(results => results.json())
-            .then(data => {
-                this.props.callbk(data['metrics']);
-            });
+            .then(data => this.props.callbk(data));
 
         this.cancel();
     }

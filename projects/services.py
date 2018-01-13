@@ -1,5 +1,7 @@
+import time
 from collections import defaultdict
 from datetime import date
+from functools import reduce
 
 import dateutil
 import dateutil.parser
@@ -42,7 +44,12 @@ def retrieve_metric_data(metric, participation, result_list):
 
 
 def retrieve_raw_metric_data(metric, participation, metric_data):
-    measurement_field = metric.info['field']
+    measurements = raw_metric_filters_qs(metric, participation, metric_data)
+    measurements = measurements.filter(name=metric.info['field'])
+    metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
+
+
+def raw_metric_filters_qs(metric, participation, metric_data):
     measurements = Measurement.objects.filter(activity__participation=participation)
     # measurements = Measurement.objects.filter(name=measurement_field, activity__participation=participation)
 
@@ -50,25 +57,30 @@ def retrieve_raw_metric_data(metric, participation, metric_data):
     if activity_name:
         measurements = measurements.filter(activity__entity__name=activity_name)
 
-    group = metric.info['filters'].get('group', None)
-    if group and int(group) >= 0:
-        measurements = measurements.filter(activity__entity__group_id=group)
-
-    field_from = metric.info['filters'].get('field_from', None)
-    if field_from:
-        measurements = measurements.filter(value__gte=field_from)
-
-    field_to = metric.info['filters'].get('field_to', None)
-    if field_to:
-        measurements = measurements.filter(value__lte=field_to)
+    measurements = apply_filters(measurements, metric.info['filters'])
 
     # list of properties names for filtered activities
+    # should be retrieved before filtering by measurement name
     metric_data['fields'] = list(field[0] for field in set(measurements.values_list("name").distinct()))
     metric_data['fields'].sort()
 
-    measurements = measurements.filter(name=measurement_field)
+    return measurements
 
-    metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
+
+def apply_filters(measurements_qs, filters):
+    group = filters.get('group', None)
+    if group and int(group) >= 0:
+        measurements_qs = measurements_qs.filter(activity__entity__group_id=group)
+
+    field_from = filters.get('field_from', None)
+    if field_from:
+        measurements_qs = measurements_qs.filter(value__gte=field_from)
+
+    field_to = filters.get('field_to', None)
+    if field_to:
+        measurements_qs = measurements_qs.filter(value__lte=field_to)
+
+    return measurements_qs
 
 
 def retrieve_composite_metric_data(metric, participation, metric_data, result_list):
@@ -125,7 +137,7 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
         y_val = []
 
         if groupby:
-            # if groupby[1] == 'sum':
+            # if groupby['group_func'] == 'sum':
             agg_func = lambda a, b: a + b
             if groupby['group_func'] == 'count':
                 agg_func = lambda a, b: a + 1
@@ -140,13 +152,10 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
                         elif m['type'] == "datetime":
                             timestamp = dateutil.parser.parse(m['value'].upper()).timestamp()
                         break
-                        # if m['name'] == 'connect time' or m['name'] == 'code begin time':
-                        #
-                        # elif m['name'] == 'from':
 
                 return int(timestamp)
 
-            grouped = []
+            grouped = {}
             if groupby['group_type'] == 'day':
                 grouped = group_by_day(activity_values, get_timestamp_from_activity, agg_func)
             elif groupby['group_type'] == '3_days':
@@ -236,3 +245,106 @@ def group_by_7_days(activity_values, key_func, agg_func):
 
 def group_by_30_days(activity_values, key_func, agg_func):
     return group_by_interval(activity_values, key_func, agg_func, interval=30 * 60 * 60 * 24, shift=True)
+
+
+######################################################################
+# retrieving only current metrics values
+
+def retrieve_current_metrics(participation):
+    result = []
+    metrics = Metric.objects.filter(participation=participation)
+    for m in metrics:
+        result.append(retrieve_current_metric_data(m, participation))
+    result.sort(key=lambda m: m['id'])
+    return result
+
+
+def retrieve_current_metric_data(metric, participation, strategy="NO_RAW", groupby=None):
+    if type(metric) is int:
+        metric = Metric.objects.get(pk=metric)
+        metric_data = model_to_dict(metric)
+    else:
+        metric_data = model_to_dict(metric)
+
+    if metric.type == Metric.COMPOSITE:
+        retrieve_current_composite_metric_data(metric, participation, metric_data)
+    elif strategy != "NO_RAW":
+        retrieve_current_raw_metric_data(metric, participation, metric_data, strategy, groupby)
+    else:
+        # for retrieving only available activities fields
+        raw_metric_filters_qs(metric, participation, metric_data)
+
+    return metric_data
+
+
+def retrieve_current_raw_metric_data(metric, participation, metric_data, strategy="LAST", groupby=None):
+    measurements = raw_metric_filters_qs(metric, participation, metric_data)
+    measurements = measurements.filter(name=metric.info['field'])
+
+    if strategy == "LAST":
+        metric_data['value'] = measurements.order_by('-id').first().value
+
+    elif strategy == "GROUPING":
+        metric_data['value'] = 0
+        activity_ids = measurements.values_list('activity_id', flat=True)
+
+        if groupby['group_type'] == 'day':
+            cur_day_timestamp = int(time.time() / (24 * 60 * 60)) * 24 * 60 * 60
+            time_measurements = Measurement.objects.filter(activity__in=activity_ids, name=groupby['group_timefield'])
+
+            allowed_activities = set()
+            for t in time_measurements:
+                if t.type == "long":
+                    timestamp = int(t.value) / 1000  # without millis
+                elif t.type == "datetime":
+                    timestamp = dateutil.parser.parse(t.value.upper()).timestamp()
+                else:
+                    continue
+
+                if timestamp >= cur_day_timestamp:
+                    allowed_activities.add(t.activity_id)
+
+            measurements = measurements.filter(activity__in=allowed_activities)
+
+        values = measurements.values_list('type', 'value')
+
+        if groupby['group_func'] == 'count':
+            metric_data['value'] = len(values)
+        elif groupby['group_func'] == 'sum':
+            metric_data['value'] = 0
+            for v in values:
+                if (v[0] == "long") or (v[0] == "int"):
+                    metric_data['value'] += int(v[1])
+                elif v[0] == "datetime":
+                    metric_data['value'] += dateutil.parser.parse(v[1].upper()).timestamp() * 1000  # with millis
+
+
+def retrieve_current_composite_metric_data(metric, participation, metric_data):
+    component_ids = list(map(int, metric.info['components']))
+    aggregate = metric.info['aggregate']
+    groupby = metric.info.get('groupby', None)
+
+    if groupby:
+        # TODO more than two components
+        components = [
+            retrieve_current_metric_data(component_ids[0], participation, strategy="GROUPING", groupby=groupby),
+            retrieve_current_metric_data(component_ids[1], participation, strategy="GROUPING", groupby=groupby),
+        ]
+    else:
+        components = [
+            retrieve_current_metric_data(component_ids[0], participation, strategy="LAST"),
+            retrieve_current_metric_data(component_ids[1], participation, strategy="LAST"),
+        ]
+
+    metric_data['components'] = components
+
+    values = [c['value'] for c in components]
+
+    if aggregate == "minus":
+        metric_data['value'] = float(values[0]) - float(values[1])
+    elif aggregate == "sum":
+        metric_data['value'] = sum(values)
+    elif aggregate == "mult":
+        metric_data['value'] = reduce(lambda x, y: x * y, values)
+    elif aggregate == 'avg':
+        metric_data['value'] = sum(values) / float(len(values))
