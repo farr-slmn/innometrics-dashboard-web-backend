@@ -103,7 +103,7 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
 
     components = list(map(retrieve, components))
 
-    if components[0]['type'] == 'R':
+    if (components[0]['type'] == 'R') and (components[1]['type'] == 'R'):
 
         # measurements grouping by activity
         activity_measurements = defaultdict(list)
@@ -180,7 +180,7 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
         if y_val:
             metric_data['value'] = y_val[-1]
 
-    else:
+    elif (components[0]['type'] == 'C') and (components[1]['type'] == 'C'):
         y_val_0 = components[0]['y_values']
         y_val_1 = components[1]['y_values']
 
@@ -210,6 +210,9 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
         metric_data['y_values'] = y_val
         if y_val:
             metric_data['value'] = y_val[-1]
+    else:
+        metric_data['x_values'] = []
+        metric_data['y_values'] = []
 
 
 def group_by_interval(activity_values, key_func, agg_func, interval, shift=False):

@@ -186,12 +186,6 @@ class NewMetricModal extends Component {
                 }
             }
         }
-        let type1 = this.props.metrics.find(m => m.id === submitObj.info.components[0]).type;
-        let type2 = this.props.metrics.find(m => m.id === submitObj.info.components[1]).type;
-        if (type1 !== type2) {
-            // TODO inform user - verification failed
-            return null;
-        }
         return submitObj;
     }
 
