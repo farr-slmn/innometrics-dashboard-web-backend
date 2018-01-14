@@ -226,8 +226,14 @@ def group_by_interval(activity_values, key_func, agg_func, interval, shift=False
             period_start = period_start + 1
         day = int(period_start) * interval + shift
         if day:
-            day = str(day)
             by_day[day] = agg_func(by_day[day], av['value'])
+
+    # fill by 0 other days
+    cur_day_timestamp = time.time()
+    cur_period = min(by_day.keys())
+    while cur_period < cur_day_timestamp:
+        by_day[cur_period] += 0
+        cur_period += interval
     return by_day
 
 
