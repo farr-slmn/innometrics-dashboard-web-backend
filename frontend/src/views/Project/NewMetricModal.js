@@ -320,7 +320,7 @@ class NewMetricModal extends Component {
             formInputs = [
                 (<FormGroup row key="metric1" className="animated fadeIn">
                     <Label for="metric1" sm={3}>Metric 1</Label>
-                    <Col sm={9}>
+                    <Col sm={8}>
                         <Input type="select" name="metric" id="metric1"
                                required defaultValue="" onChange={this.changeMetric.bind(this, 0)}>
                             <option value="">-- Select a metric --</option>
@@ -331,11 +331,12 @@ class NewMetricModal extends Component {
                             ))}
                         </Input>
                     </Col>
+                    {/*{this.createDescriptionButton("metric", "metricDescriptionButton")}*/}
                 </FormGroup>),
 
                 (<FormGroup row key="metric2" className="animated fadeIn">
                     <Label for="metric2" sm={3}>Metric 2</Label>
-                    <Col sm={9}>
+                    <Col sm={8}>
                         <Input type="select" name="metric" id="metric2"
                                required defaultValue="" onChange={this.changeMetric.bind(this, 1)}>
                             <option value="">-- Select a metric --</option>
@@ -346,11 +347,18 @@ class NewMetricModal extends Component {
                             ))}
                         </Input>
                     </Col>
+                    {this.createDescriptionButton("metric", "metricDescriptionButton")}
                 </FormGroup>),
+
+                this.createDescriptionRow((
+                    <div style={{"marginBottom": "1em"}}>
+                        You should select two metrics of <code>Raw</code> or <code>Composite</code> type. Extra
+                        grouping operations will be available after selecting both metrics of type <code>Raw</code>.
+                    </div>), "metric", "metricDescription"),
 
                 (<FormGroup row key="aggregate" className="animated fadeIn">
                     <Label for="aggregate" sm={3}>Operation</Label>
-                    <Col sm={9}>
+                    <Col sm={8}>
                         <Input type="select" name="aggregate" id="aggregate"
                                required defaultValue="">
                             <option value="">-- Select an operation --</option>
@@ -358,11 +366,18 @@ class NewMetricModal extends Component {
                             <option value="timeinter">Time interval between UTC time values</option>
                         </Input>
                     </Col>
+                    {this.createDescriptionButton("operation", "operationDescriptionButton")}
                 </FormGroup>),
+
+                this.createDescriptionRow((
+                    <div style={{"marginBottom": "1em"}}>
+                        Main aggregation operation to combine selected metrics. Extra
+                        grouping operations will be available after selecting both metrics of type <code>Raw</code>.
+                    </div>), "operation", "operationDescription"),
             ];
             if (this.state.showGroupby) {
-                formInputs.push((
-                    <FormGroup row key="groupby" className="animated fadeIn">
+                formInputs.push(
+                    (<FormGroup row key="groupby" className="animated fadeIn">
                         <Label for="group_type" sm={3}>Group by</Label>
                         <Col sm={3}>
                             <Input type="select" name="group_type" id="groupbyType" onChange={this.changeGrouping}
@@ -382,7 +397,7 @@ class NewMetricModal extends Component {
                                     ))}
                                 </Input>
                             </Col>),
-                            (<Col sm={4} key="group_timefield" className="animated fadeIn">
+                            (<Col sm={3} key="group_timefield" className="animated fadeIn">
                                 <Input type="select" name="group_timefield" id="groupbyTimeField" default="" required>
                                     <option value="">-- Choose time field --</option>
                                     {Array.from(
@@ -391,10 +406,18 @@ class NewMetricModal extends Component {
                                         <option value={f} key={i}>{f}</option>
                                     ))}
                                 </Input>
-                            </Col>)] : null
+                            </Col>)] : (<Col sm={5}></Col>)
                         }
-                    </FormGroup>
-                ));
+                        {this.createDescriptionButton("grouping", "groupingDescriptionButton")}
+                    </FormGroup>),
+
+                    this.createDescriptionRow((
+                        <div style={{"marginBottom": "1em"}}>
+                            <code>Raw</code> metrics can be grouped by some time period obtained from selected
+                            activity property. Selected property field should be one of the next filed types:
+                            <code>datetime</code>, <code>long</code> (if values represent timestamp)
+                        </div>), "grouping", "groupingDescription"),
+                );
             }
         }
 
@@ -406,7 +429,7 @@ class NewMetricModal extends Component {
                         <ModalBody>
                             <FormGroup row>
                                 <Label for="metricName" sm={3}>Name</Label>
-                                <Col sm={9}>
+                                <Col sm={8}>
                                     <Input type="text" name="name" id="metricName" onChange={this.changeName} required
                                            placeholder="Please enter a metric name"/>
                                 </Col>
@@ -429,8 +452,8 @@ class NewMetricModal extends Component {
                                 <div>
                                     <code>Raw</code> metric type is filtered measurements of
                                     collected data that can be represented in table view. <br/>
-                                    <code>Composite</code> metric type consists of two metrics of Raw type aggregated
-                                    by some operation and can be represented in chart view and as tiles.
+                                    <code>Composite</code> metric type consists of two metrics of Raw or Composite type
+                                    aggregated by some operation and can be represented in chart view and as tiles.
                                 </div>), "metricType", "metricTypeDescription")}
 
                             <h4>Settings</h4>
