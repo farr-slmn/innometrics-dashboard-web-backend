@@ -6,13 +6,21 @@ class MetricTile extends Component {
 
     constructor(props) {
         super(props);
-        this.id = props.id;
+        this.id = props.metric.id;
         this.projectId = props.projectId;
-        this.name = props.name;
-        this.value = props.value;
+        this.name = props.metric.name;
         this.trend = props.trend;
+
+        this.getMetricValue = this.getMetricValue.bind(this);
     }
 
+    getMetricValue() {
+        if (!Number.isFinite(this.props.metric.value) && (this.props.metric.type === "C")) {
+            return "-";
+        } else {
+            return this.props.metric.value;
+        }
+    }
 
     render() {
         return (
@@ -21,7 +29,7 @@ class MetricTile extends Component {
                       style={{color: 'white', textDecoration: 'none'}}>
                     <div className="card-body">
                         {this.name}
-                        <h3>{this.value}</h3>
+                        <h3>{this.getMetricValue()}</h3>
                     </div>
                 </Link>
             </Card>

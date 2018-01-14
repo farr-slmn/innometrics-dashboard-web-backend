@@ -40,22 +40,24 @@ class MetricContainer extends Component {
 
     render() {
         if (this.state.type === 'C') {
+
+            this.components = [
+                this.props.metrics.find(m => m.id === this.props.metric.info.components[0]),
+                this.props.metrics.find(m => m.id === this.props.metric.info.components[1]),
+            ];
+
             return (
                 <div>
                     <div className="row">
-                        <div className="col-12 col-sm-3 col-md-2" key={"first_" + this.state.components[0].id}>
+                        <div className="col-12 col-sm-3 col-md-2" key={"first_" + this.components[0].id}>
                             <MetricTile trend="neutral"
                                         projectId={this.projId}
-                                        id={this.state.components[0].id}
-                                        name={this.state.components[0].name}
-                                        value={this.state.components[0].value}/>
+                                        metric={this.components[0]}/>
                         </div>
-                        <div className="col-12 col-sm-3 col-md-2" key={"second_" + this.state.components[1].id}>
+                        <div className="col-12 col-sm-3 col-md-2" key={"second_" + this.components[1].id}>
                             <MetricTile trend="neutral"
                                         projectId={this.projId}
-                                        id={this.state.components[1].id}
-                                        name={this.state.components[1].name}
-                                        value={this.state.components[1].value}/>
+                                        metric={this.components[1]}/>
                         </div>
                     </div>
                     {this.state.loading ?

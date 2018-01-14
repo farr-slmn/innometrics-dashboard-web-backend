@@ -41,19 +41,8 @@ class ProjectActivitiesAutocomplete(APIView):
         return JsonResponse({'activities': list(result)})
 
 
-class UserProjectMetrics(APIView):
+class MetricsValues(APIView):
     permission_classes = (permissions.IsAuthenticated,)
-
-    def put(self, request):
-        project_id = request.GET.get('project', None)
-        participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
-        request.data['participation'] = participation.id
-        serializer = MetricSerializer(data=request.data)
-        if serializer.is_valid():
-            new_metric = serializer.save()
-            metric = retrieve_current_metric_data(new_metric, participation, [])
-            return JsonResponse(metric, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
         project_id = request.GET.get('project', None)
@@ -82,3 +71,26 @@ class MetricsData(APIView):
 
         result = retrieve_metric_data(metric, participation, [])
         return JsonResponse(result)
+
+
+class UserProjectMetrics(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def put(self, request):
+        project_id = request.GET.get('project', None)
+        participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
+        request.data['participation'] = participation.id
+        serializer = MetricSerializer(data=request.data)
+        if serializer.is_valid():
+            new_metric = serializer.save()
+            metric = retrieve_current_metric_data(new_metric, participation, [])
+            return JsonResponse(metric, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        project_id = request.GET.get('project', None)
+        metrics = Metric.objects.filter(participation__user=request.user.id,
+                                        participation__project=project_id).order_by("id")
+        serializer = MetricSerializer(metrics, many=True)
+
+        return JsonResponse({'metrics': serializer.data})

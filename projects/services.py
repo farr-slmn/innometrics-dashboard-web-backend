@@ -102,7 +102,6 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
         return retrieve_metric_data(mtc, participation, result_list) if type(mtc) is int else mtc
 
     components = list(map(retrieve, components))
-    metric_data['components'] = component_ids
 
     if components[0]['type'] == 'R':
 
@@ -341,8 +340,6 @@ def retrieve_current_composite_metric_data(metric, participation, metric_data):
             retrieve_current_metric_data(component_ids[0], participation, strategy="LAST"),
             retrieve_current_metric_data(component_ids[1], participation, strategy="LAST"),
         ]
-
-    metric_data['components'] = components
 
     values = [c['value'] for c in components]
 

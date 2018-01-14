@@ -110,7 +110,7 @@ class NewMetricModal extends Component {
         if (metricId || (metricId == 0)) {
             let m = this.props.metrics.find(m => m.id == metricId);
             if (m && (m.type === "R")) {
-                newState.groupbyTimeFields[idx] = m.fields;
+                newState.groupbyTimeFields[idx] = [].concat(m.fields);
             }
         }
         newState.showGroupby = Boolean(newState.groupbyTimeFields[0].length) && Boolean(newState.groupbyTimeFields[1].length);

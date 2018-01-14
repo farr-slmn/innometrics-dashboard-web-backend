@@ -19,6 +19,7 @@ class Project extends Component {
 
         this.toggle = this.toggle.bind(this);
         this.newMetric = this.newMetric.bind(this);
+        this.loadMetricValues = this.loadMetricValues.bind(this);
     }
 
     componentDidMount() {
@@ -33,6 +34,21 @@ class Project extends Component {
                 this.setState({
                     metrics: data.metrics,
                     loading: false,
+                });
+                this.loadMetricValues();
+            });
+    }
+
+    loadMetricValues() {
+        let url = '/projects/metrics/values/';
+        if (Number.isInteger(this.proj.id)) {
+            url += '?project=' + this.proj.id;
+        }
+        fetch(url, {credentials: "same-origin"})
+            .then(results => results.json())
+            .then(data => {
+                this.setState({
+                    metrics: data.metrics,
                 });
             });
     }
@@ -194,9 +210,7 @@ class Project extends Component {
                                         <Col xs={12} sm={3} md={2} className="animated fadeIn" key={metric.id}>
                                             <MetricTile trend="neutral"
                                                         projectId={this.proj.id}
-                                                        id={metric.id}
-                                                        name={metric.name}
-                                                        value={metric.value}/>
+                                                        metric={metric}/>
                                         </Col>
                                     ))
                                 }
