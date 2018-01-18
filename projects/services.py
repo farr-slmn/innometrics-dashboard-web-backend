@@ -5,6 +5,7 @@ from functools import reduce
 
 import dateutil
 import dateutil.parser
+from django.db.models import Q
 from django.forms import model_to_dict
 
 from measurements.models import Measurement
@@ -57,7 +58,7 @@ def raw_metric_filters_qs(metric, participation, metric_data):
     if activity_name:
         measurements = measurements.filter(activity__entity__name=activity_name)
 
-    measurements = apply_filters(measurements, metric.info['filters'])
+    measurements = apply_filters(measurements, metric.info['filters'], metric.info['field'])
 
     # list of properties names for filtered activities
     # should be retrieved before filtering by measurement name
@@ -67,18 +68,19 @@ def raw_metric_filters_qs(metric, participation, metric_data):
     return measurements
 
 
-def apply_filters(measurements_qs, filters):
+def apply_filters(measurements_qs, filters, field_name):
     group = filters.get('group', None)
     if group and int(group) >= 0:
         measurements_qs = measurements_qs.filter(activity__entity__group_id=group)
 
     field_from = filters.get('field_from', None)
     if field_from:
-        measurements_qs = measurements_qs.filter(value__gte=field_from)
+        # TODO could be reasonable to filter whole activity by property value
+        measurements_qs = measurements_qs.filter(~Q(name=field_name) | Q(value__gte=field_from))
 
     field_to = filters.get('field_to', None)
     if field_to:
-        measurements_qs = measurements_qs.filter(value__lte=field_to)
+        measurements_qs = measurements_qs.filter(~Q(name=field_name) | Q(value__lte=field_to))
 
     return measurements_qs
 
