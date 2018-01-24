@@ -170,7 +170,9 @@ STATIC_ROOT = './static/'
 STATIC_URL = '/static/'
 
 
+LOGIN_URL = '/api-auth/login/'
 LOGIN_REDIRECT_URL = '/dash_react/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Uncomment when deploying in heroku
 # import dj_database_url

@@ -1,15 +1,13 @@
+from django.conf import settings
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
-
-from activities import views
 from rest_framework.authtoken import views as rest_views
 
+from activities import views
 from innoMetrcisServ.rpc import Router
-
-from django.conf.urls.static import static
-from django.conf import settings
-
 
 router = Router()
 
@@ -36,7 +34,7 @@ urlpatterns = [
 
     # for dashboards:
     url(r'^dashboard/', include('dash.urls')),
-    url(r'^dash_react/', TemplateView.as_view(template_name="dash_react.html")),
+    url(r'^dash_react/', login_required(TemplateView.as_view(template_name="dash_react.html"))),
 
     url(r'^projects/', include('projects.urls')),
 

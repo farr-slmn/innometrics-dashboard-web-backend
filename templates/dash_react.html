@@ -2,11 +2,15 @@
 {% load static %}
 <!doctype html>
 <html>
-<head>
-    <title>Dashboard</title>
-    </head>
-    <body class="app header-fixed sidebar-fixed aside-menu-fixed aside-menu-hidden">
-        <div id="root"></div>
-        {% render_bundle 'index' %}
-    </body>
+  <head>
+    <title>Innometrics - Dashboard</title>
+  </head>
+  <body class="app header-fixed sidebar-fixed aside-menu-fixed aside-menu-hidden">
+    <script type="text/javascript">
+      var user_name = "{{user.get_username}}";
+      var user_email = "{{user.email}}";
+    </script>
+    <div id="root"></div>
+    {% render_bundle 'index' %}
+  </body>
 </html>
