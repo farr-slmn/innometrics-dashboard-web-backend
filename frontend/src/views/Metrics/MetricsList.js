@@ -1,63 +1,87 @@
 import React, {Component} from 'react';
 import {Link} from "react-router-dom";
 import {SyncLoader} from "react-spinners";
+import {Button} from "reactstrap";
 
 
 class MetricsList extends Component {
+
+    static tableHeaders(metric) {
+        if (metric) {
+            let headFields = Object.keys(metric).map((field, idx) => (
+              <th key={idx}>{field}</th>
+            ));
+
+            return (
+              <tr className="animated fadeIn">
+                <th>#</th>
+                {headFields}
+                <th>Delete</th>
+              </tr>
+            );
+        }
+        return (null);
+    }
+
+    dependent(metricId) {
+        return this.props.metrics.filter(m => m.type === "C" && m.info.components.includes(metricId));
+    }
+
+    del(metricId) {
+        this.props.deleteAction(metricId);
+    }
+
     render() {
 
-        return (
-            <div className="card">
-                <div className="card-header">
-                    {this.props.name}
-                </div>
-                <div className="card-body">
-                    <div className="text-center">
-                        <SyncLoader loading={this.props.loading} color="#36D7B7" size={20} margin="10px"/>
-                    </div>
-                    <table className="table table-striped">
-                        <thead>
-                        <TableHeaders metric={this.props.metrics[0]}/>
-                        </thead>
-                        <tbody>
-                        {this.props.metrics.map((metric, idx) => (
-                            <tr key={idx} className="animated fadeIn">
-                                <th scope="row">{idx + 1}</th>
-                                {Object.keys(metric)
-                                    .filter(m => m !== "measurements")
-                                    .map((key, index) => {
-                                        let value = metric[key];
-                                        if (key === "name") {
-                                            value = (
-                                                <Link to={{
-                                                    pathname: "/project/" + this.props.projId + "/metric/" + metric.id,
-                                                }}>{value}</Link>
-                                            );
-                                        }
-                                        return (<td key={index}>{value}</td>)
-                                    })}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        );
-    }
-}
+        let metricsDisplayInfo = this.props.metrics.map(m => ({
+            id: m.id,
+            name: m.name,
+            type: m.type === "C" ? "Composite" : "Raw",
+            // TODO json pretty view
+            info: JSON.stringify(m.info),
+        }));
 
-function TableHeaders(props) {
-    if (props.metric) {
+        let tableRows = metricsDisplayInfo.map((metric, idx) => (
+
+          <tr key={idx} className="animated fadeIn">
+            <th scope="row">{idx + 1}</th>
+              {Object.keys(metric)
+                  .filter(m => m !== "measurements")
+                  .map((key, index) => {
+                      let value = metric[key];
+                      if (key === "name") {
+                          value = (
+                            <Link to={"/project/" + this.props.projId + "/metric/" + metric.id}>{value}</Link>
+                          );
+                      }
+                      return (<td key={index}>{value}</td>)
+              })}
+              <td>
+                <Button color="link" onClick={this.del.bind(this, metric.id)}
+                        disabled={this.dependent.bind(this)(metric.id).length > 0}>
+                  <i className="icon-close text-danger"/>
+                </Button>
+              </td>
+          </tr>
+        ));
+
         return (
-            <tr className="animated fadeIn">
-                <th>#</th>
-                {Object.keys(props.metric).map((field, idx) => (
-                    <th key={idx}>{field}</th>
-                ))}
-            </tr>
+          <div className="card">
+            <div className="card-header">{this.props.name}</div>
+            <div className="card-body">
+              <div className="text-center">
+                <SyncLoader loading={this.props.loading} color="#36D7B7" size={20} margin="10px"/>
+              </div>
+              <table className="table table-striped">
+                <thead>{MetricsList.tableHeaders(metricsDisplayInfo[0])}</thead>
+                <tbody>
+                  {tableRows}
+                </tbody>
+              </table>
+            </div>
+          </div>
         );
     }
-    return (null);
 }
 
 export default MetricsList;

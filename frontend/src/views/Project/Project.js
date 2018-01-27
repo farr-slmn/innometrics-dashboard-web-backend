@@ -13,17 +13,30 @@ class Project extends Component {
         this.proj = props.proj;
         this.state = {
             metrics: [],
-            newMetricModal: true,
+            newMetricModal: false,
             loading: false,
         };
 
         this.toggle = this.toggle.bind(this);
         this.newMetric = this.newMetric.bind(this);
         this.loadMetricValues = this.loadMetricValues.bind(this);
+
+        this.links = {
+            metrics: '/projects/metrics/',
+            metricsValues: '/projects/metrics/values/',
+        };
+
+        this.routes = {
+            project: "/project/" + this.proj.id,
+            tabGeneral: "/project/" + this.proj.id + "/general/",
+            tabMembers: "/project/" + this.proj.id + "/members/",
+            tabMetrics: "/project/" + this.proj.id + "/metric/",
+            tabPreferences: "/project/" + this.proj.id + "/preferences/",
+        }
     }
 
     componentDidMount() {
-        let url = '/projects/metrics/';
+        let url = this.links.metrics;
         if (Number.isInteger(this.proj.id)) {
             url += '?project=' + this.proj.id;
         }
@@ -40,7 +53,7 @@ class Project extends Component {
     }
 
     loadMetricValues() {
-        let url = '/projects/metrics/values/';
+        let url = this.links.metricsValues;
         if (Number.isInteger(this.proj.id)) {
             url += '?project=' + this.proj.id;
         }
@@ -67,6 +80,13 @@ class Project extends Component {
         });
     }
 
+    deleteMetric(metricId) {
+        let mergedMetrics = this.state.metrics.filter(m => m.id !== metricId);
+        this.setState({
+            metrics: mergedMetrics,
+        });
+    }
+
     render() {
         const pr_bar_style = {
             width: '25%'
@@ -83,29 +103,29 @@ class Project extends Component {
                 <Container fluid>
                 <ul className="nav nav-tabs">
                     <li className="nav-item">
-                        <NavLink to={"/project/" + this.proj.id + "/general/"} className="nav-link"
+                        <NavLink to={this.routes.tabGeneral} className="nav-link"
                                  activeClassName="active">General</NavLink>
                     </li>
                     <li className="nav-item">
                         {/* disable link for default project */}
-                        <NavLink to={"/project/" + this.proj.id + "/members/"} className="nav-link"
+                        <NavLink to={this.routes.tabMembers} className="nav-link"
                                  style={Number.isInteger(this.proj.id) ? {} : {pointerEvents: 'none'}}
                                  activeClassName="active">Project members</NavLink>
                     </li>
                     <li className="nav-item">
-                        <NavLink to={"/project/" + this.proj.id + "/metric/"} className="nav-link"
+                        <NavLink to={this.routes.tabMetrics} className="nav-link"
                                  activeClassName="active">Metrics</NavLink>
                     </li>
                     <li className="nav-item">
-                        <NavLink to={"/project/" + this.proj.id + "/preferences/"} className="nav-link"
+                        <NavLink to={this.routes.tabPreferences} className="nav-link"
                                  activeClassName="active">Preferences</NavLink>
                     </li>
                 </ul>
                 <Switch>
-                    <Redirect exact from={"/project/" + this.proj.id} to={"/project/" + this.proj.id + "/general/"}/>
+                    <Redirect exact from={this.routes.project} to={this.routes.tabGeneral}/>
                 </Switch>
                 <Switch>
-                    <Route path={"/project/" + this.proj.id + "/preferences/"}>
+                    <Route path={this.routes.tabPreferences}>
                         <div>
                             <div>
                                 Project name: {this.proj.name}
@@ -117,12 +137,12 @@ class Project extends Component {
                     </Route>
                 </Switch>
                 <Switch>
-                    <Route path={"/project/" + this.proj.id + "/members/"}>
+                    <Route path={this.routes.tabMembers}>
                         <Members participants={this.proj.participants}/>
                     </Route>
                 </Switch>
                 <Switch>
-                    <Route path={"/project/" + this.proj.id + "/general/"} name="General">
+                    <Route path={this.routes.tabGeneral} name="General">
                         <div className="container">
                             <div className="row card-group animated fadeIn">
                                 <div className="card">
@@ -220,8 +240,9 @@ class Project extends Component {
                 </Switch>
 
                 <Switch>
-                    <Route path={"/project/" + this.proj.id + "/metric/"}>
-                        <MetricsContainer projId={this.proj.id} metrics={this.state.metrics} loading={this.state.loading}/>
+                    <Route path={this.routes.tabMetrics}>
+                        <MetricsContainer projId={this.proj.id} loading={this.state.loading}
+                                          metrics={this.state.metrics} deleteAction={this.deleteMetric.bind(this)}/>
                     </Route>
                 </Switch>
 

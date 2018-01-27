@@ -20,7 +20,7 @@ class NewMetricModal extends Component {
         super(props);
         this.state = {
             name: "default",
-            type: "C",
+            type: "R",
             filters: [],
             activities: [],
             fields: [],

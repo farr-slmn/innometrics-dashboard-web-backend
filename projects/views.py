@@ -94,3 +94,17 @@ class UserProjectMetrics(APIView):
         serializer = MetricSerializer(metrics, many=True)
 
         return JsonResponse({'metrics': serializer.data})
+
+    def delete(self, request, pk):
+        metric = Metric.objects.get(pk=pk, participation__user=request.user.id)
+        if metric:
+            metrics = Metric.objects.filter(participation__user=request.user.id)
+            for m in metrics:
+                if m.type == "C" and metric.id in m.info['components']:
+                    return JsonResponse({"id": ["This metric has other dependent metrics."]},
+                                        status=status.HTTP_400_BAD_REQUEST)
+
+            metric.delete()
+            return JsonResponse({}, status=status.HTTP_200_OK)
+
+        return Http404()
