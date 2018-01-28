@@ -246,9 +246,7 @@ class Project extends Component {
                                 {this.state.metrics.filter(metric => metric.type === 'C')
                                     .map(metric => (
                                         <Col xs={12} sm={3} md={2} className="animated fadeIn" key={metric.id}>
-                                            <MetricTile trend="neutral"
-                                                        projectId={this.proj.id}
-                                                        metric={metric}/>
+                                            <MetricTile projectId={this.proj.id} metric={metric}/>
                                         </Col>
                                     ))
                                 }

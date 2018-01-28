@@ -50,14 +50,10 @@ class MetricContainer extends Component {
                 <div>
                     <div className="row">
                         <div className="col-12 col-sm-3 col-md-2" key={"first_" + this.components[0].id}>
-                            <MetricTile trend="neutral"
-                                        projectId={this.projId}
-                                        metric={this.components[0]}/>
+                            <MetricTile projectId={this.projId} metric={this.components[0]}/>
                         </div>
                         <div className="col-12 col-sm-3 col-md-2" key={"second_" + this.components[1].id}>
-                            <MetricTile trend="neutral"
-                                        projectId={this.projId}
-                                        metric={this.components[1]}/>
+                            <MetricTile projectId={this.projId} metric={this.components[1]}/>
                         </div>
                     </div>
                     {this.state.loading ?

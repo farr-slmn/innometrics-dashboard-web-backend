@@ -163,6 +163,10 @@ class NewMetricModal extends Component {
                 components: [], // list of metrics ids
                 aggregate: undefined, // operation for aggregation: 'minus', 'timeinter'
                 groupby: {}, // dict of groping properties: 'group_type', 'group_func', 'group_timefield' (can be empty)
+                bounds: {
+                    lower: undefined,
+                    upper: undefined,
+                },
             }
         };
         // build POST body object
@@ -170,6 +174,10 @@ class NewMetricModal extends Component {
             if (e.target[i].name && e.target[i].value) {
                 if (e.target[i].name === "metric") {
                     submitObj.info.components.push(Number.parseInt(e.target[i].value));
+                } else if (e.target[i].name === "boundsLower") {
+                    submitObj.info.bounds.lower = Number.parseFloat(e.target[i].value);
+                } else if (e.target[i].name === "boundsUpper") {
+                    submitObj.info.bounds.upper = Number.parseFloat(e.target[i].value);
                 } else if (e.target[i].name === "aggregate") {
                     submitObj.info[e.target[i].name] = e.target[i].value;
                 } else if (e.target[i].name.startsWith("group_")) {
@@ -424,6 +432,29 @@ class NewMetricModal extends Component {
                         </div>), "grouping", "groupingDescription"),
                 );
             }
+            formInputs.push([
+                (<h4>Notification</h4>),
+
+                (<FormGroup row>
+                    <Label for="metricBoundLower" sm={3}>Metric value bounds</Label>
+                    <Label for="metricBoundLower" sm={2}>Lower bound: </Label>
+                    <Col sm={2}>
+                        <Input type="text" name="boundsLower" id="metricBoundLower"/>
+                    </Col>
+                    <Label for="metricBoundUpper" sm={2}>Upper bound: </Label>
+                    <Col sm={2}>
+                        <Input type="text" name="boundsUpper" id="metricBoundUpper"/>
+                    </Col>
+                    {this.createDescriptionButton("metricBounds", "metricBoundsDescriptionButton")}
+                </FormGroup>),
+
+                this.createDescriptionRow((
+                    <div style={{"marginBottom": "1em"}}>
+                        <code>Raw</code> metrics can be grouped by some time period obtained from selected
+                        activity property. Selected property field should be one of the next field types:
+                        <code>datetime</code>, <code>long</code> (if values represent timestamp)
+                    </div>), "metricBounds", "metricBoundsDescription"),
+            ]);
         }
 
         return (
