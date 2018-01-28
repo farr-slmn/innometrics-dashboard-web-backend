@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import ReactJson from 'react-json-view'
 import {Link} from "react-router-dom";
 import {SyncLoader} from "react-spinners";
 import {Button} from "reactstrap";
@@ -37,8 +38,7 @@ class MetricsList extends Component {
             id: m.id,
             name: m.name,
             type: m.type === "C" ? "Composite" : "Raw",
-            // TODO json pretty view
-            info: JSON.stringify(m.info),
+            info: m.info,
         }));
 
         let tableRows = metricsDisplayInfo.map((metric, idx) => (
@@ -46,13 +46,19 @@ class MetricsList extends Component {
           <tr key={idx} className="animated fadeIn">
             <th scope="row">{idx + 1}</th>
               {Object.keys(metric)
-                  .filter(m => m !== "measurements")
                   .map((key, index) => {
                       let value = metric[key];
                       if (key === "name") {
                           value = (
                             <Link to={"/project/" + this.props.projId + "/metric/" + metric.id}>{value}</Link>
                           );
+                      }
+                      if (key === "info") {
+                          value = (<ReactJson src={value}
+                                              name={false}
+                                              collapsed={1}
+                                              enableClipboard={false}
+                                              displayDataTypes={false}/>);
                       }
                       return (<td key={index}>{value}</td>)
               })}

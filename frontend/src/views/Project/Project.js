@@ -61,7 +61,6 @@ class Project extends Component {
                 this.setState({
                     activities: data.activities,
                 });
-                console.log(this.state.activities);
             });
     }
 
@@ -162,7 +161,7 @@ class Project extends Component {
                 </Switch>
                 <Switch>
                     <Route path={this.routes.tabGeneral} name="General">
-                        <div className="container">
+                        <div className="container tab-margin">
                             <div className="row card-group animated fadeIn">
                                 <div className="card">
                                     <div className="card-block">

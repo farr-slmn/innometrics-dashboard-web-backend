@@ -92,7 +92,7 @@ class MetricsContainer extends Component {
         }
 
         return (
-          <div>
+          <div className="tab-margin">
             {modalDelete}
 
             <Switch>

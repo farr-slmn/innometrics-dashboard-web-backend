@@ -20,14 +20,14 @@ class ActivitiesTab extends Component {
     render() {
 
         return (
-          <ListGroup style={{marginTop: "2em"}} className="animated fadeIn">
+          <ListGroup className="animated fadeIn tab-margin">
             {this.props.activities.map((a, i) => (
               <ListGroupItem key={i} tag="button" action onClick={this.toggle.bind(this, i)}>
 
                 <ListGroupItemHeading>{a.name}</ListGroupItemHeading>
 
                 <Collapse isOpen={this.state.activitiesToggle[i]}>
-                  <ListGroupItemText style={{marginLeft: "2em", marginTop: "1em"}}>
+                  <ListGroupItemText style={{marginLeft: "1em"}} className="tab-margin">
                       {a.properties.map((p, i) => (
                         <span key={i}><code>[{p.type}]</code> {p.name}<br/></span>
                       ))}
