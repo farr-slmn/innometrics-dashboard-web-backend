@@ -21,9 +21,10 @@ class Project extends Component {
         this.newMetric = this.newMetric.bind(this);
         this.loadMetricValues = this.loadMetricValues.bind(this);
 
+        let project = Number.isInteger(this.proj.id) ? '?project=' + this.proj.id : '';
         this.links = {
-            metrics: '/projects/metrics/',
-            metricsValues: '/projects/metrics/values/',
+            metrics: '/projects/metrics/' + project,
+            metricsValues: '/projects/metrics/values/' + project,
         };
 
         this.routes = {
@@ -37,9 +38,6 @@ class Project extends Component {
 
     componentDidMount() {
         let url = this.links.metrics;
-        if (Number.isInteger(this.proj.id)) {
-            url += '?project=' + this.proj.id;
-        }
         this.setState({loading: true});
         fetch(url, {credentials: "same-origin"})
             .then(results => results.json())
@@ -54,9 +52,6 @@ class Project extends Component {
 
     loadMetricValues() {
         let url = this.links.metricsValues;
-        if (Number.isInteger(this.proj.id)) {
-            url += '?project=' + this.proj.id;
-        }
         fetch(url, {credentials: "same-origin"})
             .then(results => results.json())
             .then(data => {

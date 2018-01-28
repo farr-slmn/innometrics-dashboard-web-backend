@@ -23,7 +23,7 @@ class NewMetricModal extends Component {
             type: "R",
             filters: [],
             activities: [],
-            fields: [],
+            properties: [],
             showGroupby: false,
             grouping: false,
             groupbyTimeFields: [[], []],
@@ -46,18 +46,22 @@ class NewMetricModal extends Component {
         this.cancel = this.cancel.bind(this);
         this.changeActivity = this.changeActivity.bind(this);
         this.changeGrouping = this.changeGrouping.bind(this);
+        this.findType = this.findType.bind(this);
+
+        let project = Number.isInteger(props.projId) ? '?project=' + props.projId : '';
+        this.links = {
+            activities: '/projects/metrics/activities/' + project,
+            metrics: '/projects/metrics/' + project,
+        };
     }
 
     componentDidMount() {
-        // retrieve activities and activities fields for autocomplete
-        let url = '/projects/metrics/activities/';
-        if (Number.isInteger(this.props.projId)) {
-            url += '?project=' + this.props.projId;
-        }
+        // retrieve activities and activities properties for autocomplete
+        let url = this.links.activities;
         fetch(url, {credentials: "same-origin"})
             .then(results => results.json())
             .then(data => {
-                this.setState({activities: data.activities})
+                this.setState({activities: data.activities});
             });
     }
 
@@ -72,7 +76,7 @@ class NewMetricModal extends Component {
                         <i className="icon-close"/>
                     </Button>
                 </Col>
-                <Col sm={4}>
+                <Col sm={3}>
                     <Input type="select" name="filterType" id={"filter_" + newId + "type"} onChange={this.changeFilter}>
                         <option value="field_from">Value >= than</option>
                         <option value="field_to">Value {"<="} than</option>
@@ -82,6 +86,7 @@ class NewMetricModal extends Component {
                 <Col sm={5}>
                     <Input type="text" name="filter" id={"filter_" + newId} onChange={this.changeField}/>
                 </Col>
+                <Col sm={1}/>
             </FormGroup>
         ));
         this.setState({filters: filters});
@@ -94,11 +99,11 @@ class NewMetricModal extends Component {
 
     changeActivity(activity) {
         let activityName = activity.target.value;
-        let fields = [];
+        let properties = [];
         if (activityName) {
-            fields = this.state.activities.find(a => a.name === activityName).fields;
+            properties = this.state.activities.find(a => a.name === activityName).properties;
         }
-        this.setState({fields: fields});
+        this.setState({properties: properties});
     }
 
     changeMetric(idx, metric) {
@@ -194,10 +199,7 @@ class NewMetricModal extends Component {
         let submitObj = this.getSubmitObj(this.state.type, e);
 
         // create metric request
-        let url = '/projects/metrics/';
-        if (Number.isInteger(this.props.projId)) {
-            url += '?project=' + this.props.projId;
-        }
+        let url = this.links.metrics;
         fetch(url, {
             credentials: "same-origin",
             method: "PUT",
@@ -217,7 +219,7 @@ class NewMetricModal extends Component {
     cancel() {
         this.setState({
             filters: [],
-            fields: [],
+            properties: [],
             showGroupby: false,
             groupbyTimeFields: [[], []],
             toggle: {},
@@ -226,10 +228,21 @@ class NewMetricModal extends Component {
         this.filterCounter = 0;
     }
 
+    findType(metric) {
+        if (metric.type === "R") {
+            let act = this.state.activities.find(a => a.name === metric.info['activity']);
+            if (act) {
+                let property = act.properties.find(p => p.name === metric.info['field']);
+                return property ? property.type : "";
+            }
+        }
+        return "";
+    }
+
     createDescriptionRow(contentComponent, toggleField, key) {
         return (
             <Row key={key}>
-                <Col sm={3}></Col>
+                <Col sm={3}/>
                 <Col sm={8}>
                     <Collapse isOpen={this.state.toggle[toggleField]}>
                         {contentComponent}
@@ -280,10 +293,12 @@ class NewMetricModal extends Component {
                 (<FormGroup row key="field" className="animated fadeIn">
                     <Label for="field" sm={3}>Activity property</Label>
                     <Col sm={8}>
-                        {this.state.fields.length ?
+                        {this.state.properties.length ?
                             (<Input type="select" name="field" id="metricField" defaultValue="" required>
                                 <option value="" disabled>Please select an item</option>
-                                {this.state.fields.map((a, i) => (<option key={i} value={a}>{a}</option>))}
+                                {this.state.properties.map((p, i) => (
+                                    <option key={i} value={p.name}>{"[type: " + p.type + "] " + p.name}</option>
+                                ))}
                             </Input>) :
                             // TODO add autocomplete
                             (<Input type="text" name="field" id="metricField" onChange={this.changeField}
@@ -302,7 +317,7 @@ class NewMetricModal extends Component {
                 (<FormGroup key="filters" className="animated fadeIn">
                     <Row>
                         <Col sm={3} tag="h5">Filters</Col>
-                        <Col sm={8}></Col>
+                        <Col sm={8}/>
                         {this.createDescriptionButton("filters", "filtersDescriptionButton")}
                     </Row>
                     {this.createDescriptionRow((
@@ -320,33 +335,35 @@ class NewMetricModal extends Component {
             formInputs = [
                 (<FormGroup row key="metric1" className="animated fadeIn">
                     <Label for="metric1" sm={3}>Metric 1</Label>
-                    <Col sm={8}>
+                    <Col sm={5}>
                         <Input type="select" name="metric" id="metric1"
                                required defaultValue="" onChange={this.changeMetric.bind(this, 0)}>
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
-                                    {"[" + (m.type === "R" ? "Raw" : "Composite") + "]: " + m.name}
+                                    {"[" + (m.type === "R" ? "Raw: " + this.findType(m) : "Composite") + "]: " + m.name}
                                 </option>
                             ))}
                         </Input>
                     </Col>
+                    <Col sm={3}/>
                     {/*{this.createDescriptionButton("metric", "metricDescriptionButton")}*/}
                 </FormGroup>),
 
                 (<FormGroup row key="metric2" className="animated fadeIn">
                     <Label for="metric2" sm={3}>Metric 2</Label>
-                    <Col sm={8}>
+                    <Col sm={5}>
                         <Input type="select" name="metric" id="metric2"
                                required defaultValue="" onChange={this.changeMetric.bind(this, 1)}>
                             <option value="">-- Select a metric --</option>
                             {this.props.metrics.map((m, i) => (
                                 <option key={i} value={m.id}>
-                                    {"[" + (m.type === "R" ? "Raw" : "Composite") + "]: " + m.name}
+                                    {"[" + (m.type === "R" ? "Raw: " + this.findType(m) : "Composite") + "]: " + m.name}
                                 </option>
                             ))}
                         </Input>
                     </Col>
+                    <Col sm={3}/>
                     {this.createDescriptionButton("metric", "metricDescriptionButton")}
                 </FormGroup>),
 
@@ -379,7 +396,7 @@ class NewMetricModal extends Component {
                 formInputs.push(
                     (<FormGroup row key="groupby" className="animated fadeIn">
                         <Label for="group_type" sm={3}>Group by</Label>
-                        <Col sm={3}>
+                        <Col sm={2}>
                             <Input type="select" name="group_type" id="groupbyType" onChange={this.changeGrouping}
                                    defaultValue="">
                                 <option value="">-- No grouping --</option>
@@ -397,16 +414,16 @@ class NewMetricModal extends Component {
                                     ))}
                                 </Input>
                             </Col>),
-                            (<Col sm={3} key="group_timefield" className="animated fadeIn">
+                            (<Col sm={4} key="group_timefield" className="animated fadeIn">
                                 <Input type="select" name="group_timefield" id="groupbyTimeField" default="" required>
                                     <option value="">-- Choose time field --</option>
                                     {Array.from(
                                         new Set(this.state.groupbyTimeFields[0].concat(this.state.groupbyTimeFields[1]))
                                     ).map((f, i) => (
-                                        <option value={f} key={i}>{f}</option>
+                                        <option key={i} value={f.name}>{"[type: " + f.type + "] " + f.name}</option>
                                     ))}
                                 </Input>
-                            </Col>)] : (<Col sm={5}></Col>)
+                            </Col>)] : (<Col sm={6}/>)
                         }
                         {this.createDescriptionButton("grouping", "groupingDescriptionButton")}
                     </FormGroup>),
@@ -414,7 +431,7 @@ class NewMetricModal extends Component {
                     this.createDescriptionRow((
                         <div style={{"marginBottom": "1em"}}>
                             <code>Raw</code> metrics can be grouped by some time period obtained from selected
-                            activity property. Selected property field should be one of the next filed types:
+                            activity property. Selected property field should be one of the next field types:
                             <code>datetime</code>, <code>long</code> (if values represent timestamp)
                         </div>), "grouping", "groupingDescription"),
                 );

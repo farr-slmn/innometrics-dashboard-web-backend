@@ -2,12 +2,10 @@ from django.http import JsonResponse, Http404, HttpResponseForbidden
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 
-from activities.models import Entity
-from measurements.models import Measurement
 from projects.models import Project, UserParticipation, Metric
 from projects.serializers import ProjectSerializer, MetricSerializer
 from projects.services import retrieve_current_metrics, retrieve_metric_data, \
-    retrieve_current_metric_data
+    retrieve_current_metric_data, get_activity_properties
 
 
 class ProjectList(generics.ListAPIView):
@@ -29,16 +27,9 @@ class ProjectActivitiesAutocomplete(APIView):
     def get(self, request):
         project_id = request.GET.get('project', None)
         participation = UserParticipation.objects.get(user=request.user.id, project=project_id)
-        activities = Entity.objects.filter(activity__participation=participation).values("name").distinct()
-        result = []
-        for activity in activities:
-            item = {'name': activity['name']}
-            query = Measurement.objects.filter(activity__participation=participation,
-                                               activity__entity__name=activity['name'])
-            # item['fields'] = list(field[0] for field in set(query.values_list("name").distinct()))
-            item['fields'] = list(set(query.values_list("name", flat=True)))
-            result.append(item)
-        return JsonResponse({'activities': list(result)})
+
+        result = get_activity_properties(participation)
+        return JsonResponse({'activities': result})
 
 
 class MetricsValues(APIView):

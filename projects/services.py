@@ -2,12 +2,14 @@ import time
 from collections import defaultdict
 from datetime import date
 from functools import reduce
+from itertools import groupby
 
 import dateutil
 import dateutil.parser
-from django.db.models import Q
+from django.db.models import Q, F
 from django.forms import model_to_dict
 
+from activities.models import Entity
 from measurements.models import Measurement
 from measurements.serializers import JoinedMeasurementSerializer
 from projects.models import Metric
@@ -60,10 +62,9 @@ def raw_metric_filters_qs(metric, participation, metric_data):
 
     measurements = apply_filters(measurements, metric.info['filters'], metric.info['field'])
 
-    # list of properties names for filtered activities
+    # list of properties names and type for filtered activities
     # should be retrieved before filtering by measurement name
-    metric_data['fields'] = list(field[0] for field in set(measurements.values_list("name").distinct()))
-    metric_data['fields'].sort()
+    metric_data['fields'] = list(measurements.values('name', 'type').distinct().order_by('type', 'name'))
 
     return measurements
 
@@ -356,3 +357,22 @@ def retrieve_current_composite_metric_data(metric, participation, metric_data):
         metric_data['value'] = reduce(lambda x, y: x * y, values)
     elif aggregate == 'avg':
         metric_data['value'] = sum(values) / float(len(values))
+
+
+def get_activity_properties(participation):
+    lst = Entity.objects.filter(activity__participation=participation) \
+        .annotate(activityName=F('name'),
+                  propertyName=F('activity__measurements__name'),
+                  propertyType=F('activity__measurements__type')) \
+        .values("activityName", "propertyName", "propertyType") \
+        .distinct().order_by("activityName", "propertyType")
+
+    result = []
+    for k, v in groupby(lst, key=lambda x: x['activityName']):
+        properties = map(lambda x: {
+            'name': x['propertyName'],
+            'type': x['propertyType']
+        }, v)
+        result.append({'name': k, 'properties': list(properties)})
+
+    return list(result)
