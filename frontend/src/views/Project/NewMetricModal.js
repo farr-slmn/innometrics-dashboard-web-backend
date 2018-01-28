@@ -22,7 +22,6 @@ class NewMetricModal extends Component {
             name: "default",
             type: "R",
             filters: [],
-            activities: [],
             properties: [],
             showGroupby: false,
             grouping: false,
@@ -50,19 +49,8 @@ class NewMetricModal extends Component {
 
         let project = Number.isInteger(props.projId) ? '?project=' + props.projId : '';
         this.links = {
-            activities: '/projects/metrics/activities/' + project,
             metrics: '/projects/metrics/' + project,
         };
-    }
-
-    componentDidMount() {
-        // retrieve activities and activities properties for autocomplete
-        let url = this.links.activities;
-        fetch(url, {credentials: "same-origin"})
-            .then(results => results.json())
-            .then(data => {
-                this.setState({activities: data.activities});
-            });
     }
 
     addFilter() {
@@ -101,7 +89,7 @@ class NewMetricModal extends Component {
         let activityName = activity.target.value;
         let properties = [];
         if (activityName) {
-            properties = this.state.activities.find(a => a.name === activityName).properties;
+            properties = this.props.activities.find(a => a.name === activityName).properties;
         }
         this.setState({properties: properties});
     }
@@ -230,7 +218,7 @@ class NewMetricModal extends Component {
 
     findType(metric) {
         if (metric.type === "R") {
-            let act = this.state.activities.find(a => a.name === metric.info['activity']);
+            let act = this.props.activities.find(a => a.name === metric.info['activity']);
             if (act) {
                 let property = act.properties.find(p => p.name === metric.info['field']);
                 return property ? property.type : "";
@@ -277,7 +265,7 @@ class NewMetricModal extends Component {
                         <Input type="select" name="activity" id="activity"
                                onChange={this.changeActivity} defaultValue="">
                             <option value="">-- Select an activity (optional) --</option>
-                            {this.state.activities.map((a, i) => (
+                            {this.props.activities.map((a, i) => (
                                 <option key={i} value={a.name}>{a.name}</option>))}
                         </Input>
                     </Col>

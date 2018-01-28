@@ -6,12 +6,14 @@ import {Button, Col, Container, Row} from 'reactstrap';
 import NewMetricModal from "./NewMetricModal";
 import MetricsContainer from "../../containers/MetricContainer/MetricsContainer";
 import {SyncLoader} from "react-spinners";
+import ActivitiesTab from "./ActivitiesTab";
 
 class Project extends Component {
     constructor(props) {
         super(props);
         this.proj = props.proj;
         this.state = {
+            activities: [],
             metrics: [],
             newMetricModal: false,
             loading: false,
@@ -23,6 +25,7 @@ class Project extends Component {
 
         let project = Number.isInteger(this.proj.id) ? '?project=' + this.proj.id : '';
         this.links = {
+            activities: '/projects/metrics/activities/' + project,
             metrics: '/projects/metrics/' + project,
             metricsValues: '/projects/metrics/values/' + project,
         };
@@ -31,9 +34,10 @@ class Project extends Component {
             project: "/project/" + this.proj.id,
             tabGeneral: "/project/" + this.proj.id + "/general/",
             tabMembers: "/project/" + this.proj.id + "/members/",
+            tabActivities: "/project/" + this.proj.id + "/activities/",
             tabMetrics: "/project/" + this.proj.id + "/metric/",
             tabPreferences: "/project/" + this.proj.id + "/preferences/",
-        }
+        };
     }
 
     componentDidMount() {
@@ -47,6 +51,17 @@ class Project extends Component {
                     loading: false,
                 });
                 this.loadMetricValues();
+            });
+
+        // retrieve activities and activities properties for autocomplete
+        url = this.links.activities;
+        fetch(url, {credentials: "same-origin"})
+            .then(results => results.json())
+            .then(data => {
+                this.setState({
+                    activities: data.activities,
+                });
+                console.log(this.state.activities);
             });
     }
 
@@ -108,6 +123,10 @@ class Project extends Component {
                                  activeClassName="active">Project members</NavLink>
                     </li>
                     <li className="nav-item">
+                        <NavLink to={this.routes.tabActivities} className="nav-link"
+                                 activeClassName="active">Activities</NavLink>
+                    </li>
+                    <li className="nav-item">
                         <NavLink to={this.routes.tabMetrics} className="nav-link"
                                  activeClassName="active">Metrics</NavLink>
                     </li>
@@ -134,6 +153,11 @@ class Project extends Component {
                 <Switch>
                     <Route path={this.routes.tabMembers}>
                         <Members participants={this.proj.participants}/>
+                    </Route>
+                </Switch>
+                <Switch>
+                    <Route path={this.routes.tabActivities}>
+                        <ActivitiesTab activities={this.state.activities}/>
                     </Route>
                 </Switch>
                 <Switch>
@@ -242,7 +266,7 @@ class Project extends Component {
                 </Switch>
 
                 <NewMetricModal newMetricModal={this.state.newMetricModal} toggle={this.toggle} callbk={this.newMetric}
-                                projId={this.proj.id} metrics={this.state.metrics}/>
+                                projId={this.proj.id} metrics={this.state.metrics} activities={this.state.activities}/>
 
                 </Container>
             </div>
