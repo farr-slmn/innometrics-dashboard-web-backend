@@ -1,8 +1,8 @@
 from django.http import JsonResponse
-from measurements.models import Measurement
-from measurements.serializers import MeasurementSerializer, JoinedMeasurementSerializer
-
 from rest_framework.views import APIView
+
+from measurements.models import Measurement
+from measurements.serializers import MeasurementSerializer
 
 
 def filter_measurements(request, serializer_class, personal=True):
@@ -35,8 +35,3 @@ class MeasurementsList(APIView):
 
     def get(self, request, format=None):
         return filter_measurements(request, MeasurementSerializer)
-
-
-class JoinedMeasurementsList(APIView):
-    def get(self, request, format=None):
-        return filter_measurements(request, JoinedMeasurementSerializer, personal=True)

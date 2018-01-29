@@ -11,7 +11,6 @@ from django.forms import model_to_dict
 
 from activities.models import Entity
 from measurements.models import Measurement
-from measurements.serializers import JoinedMeasurementSerializer
 from projects.models import Metric
 
 
@@ -48,8 +47,11 @@ def retrieve_metric_data(metric, participation, result_list):
 
 def retrieve_raw_metric_data(metric, participation, metric_data):
     measurements = raw_metric_filters_qs(metric, participation, metric_data)
-    measurements = measurements.filter(name=metric.info['field'])
-    metric_data['measurements'] = JoinedMeasurementSerializer(measurements, many=True).data
+    measurements = measurements.filter(name=metric.info['field']) \
+        .annotate(entity=F('activity__entity__name'), group=F('activity__entity__group__name')) \
+        .values('id', 'name', 'value', 'type', 'activity_id', 'entity', "group") \
+        .order_by('id')
+    metric_data['measurements'] = list(measurements)
 
 
 def raw_metric_filters_qs(metric, participation, metric_data):
