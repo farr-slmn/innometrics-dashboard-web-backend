@@ -124,16 +124,27 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
             activity_value = {
                 'source': measurements
             }
+            a = measurements[0]['value']
+            b = measurements[1]['value']
             if aggregate == 'minus':
-                a = measurements[0]['value']
-                b = measurements[1]['value']
                 activity_value['value'] = float(a) - float(b)
-
             elif aggregate == 'timeinter':
                 # represent time as timestamp in seconds
-                c = int(dateutil.parser.parse(measurements[0]['value'].upper()).timestamp())
-                d = int(dateutil.parser.parse(measurements[1]['value'].upper()).timestamp())
+                c = int(dateutil.parser.parse(a.upper()).timestamp())
+                d = int(dateutil.parser.parse(b.upper()).timestamp())
                 activity_value['value'] = abs(c - d)
+            elif aggregate == 'sum':
+                activity_value['value'] = float(a) + float(b)
+            elif aggregate == 'mult':
+                activity_value['value'] = float(a) * float(b)
+            elif aggregate == 'div':
+                activity_value['value'] = float(a) / float(b)
+            elif aggregate == 'avg':
+                activity_value['value'] = (float(a) + float(b))
+            elif aggregate == 'min':
+                activity_value['value'] = min(float(a), float(b))
+            elif aggregate == 'max':
+                activity_value['value'] = max(float(a), float(b))
 
             activity_values.append(activity_value)
 
@@ -141,10 +152,14 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
         y_val = []
 
         if groupby:
-            # if groupby['group_func'] == 'sum':
-            agg_func = lambda a, b: a + b
-            if groupby['group_func'] == 'count':
+            if groupby['group_func'] == 'sum':
+                agg_func = lambda a, b: a + b
+            elif groupby['group_func'] == 'count':
                 agg_func = lambda a, b: a + 1
+            if groupby['group_func'] == 'min':
+                agg_func = min
+            if groupby['group_func'] == 'max':
+                agg_func = max
 
             def get_timestamp_from_activity(activity_value):
                 timestamp = 0
@@ -198,16 +213,20 @@ def retrieve_composite_metric_data(metric, participation, metric_data, result_li
         if len(y_val_0) == len(y_val_1):
             for i, val in enumerate(y_val_0):
                 y_value = 0
-                if aggregate == 'div':
-                    y_value = float(y_val_0[i]) / float(y_val_1[i])
-                elif aggregate == 'mult':
-                    y_value = float(y_val_0[i]) * float(y_val_1[i])
+                if aggregate == 'minus':
+                    y_value = float(y_val_0[i]) - float(y_val_1[i])
                 elif aggregate == 'sum':
                     y_value = float(y_val_0[i]) + float(y_val_1[i])
-                elif aggregate == 'minus':
-                    y_value = float(y_val_0[i]) - float(y_val_1[i])
+                elif aggregate == 'mult':
+                    y_value = float(y_val_0[i]) * float(y_val_1[i])
+                elif aggregate == 'div':
+                    y_value = float(y_val_0[i]) / float(y_val_1[i])
                 elif aggregate == 'avg':
                     y_value = (float(y_val_0[i]) + float(y_val_1[i])) / 2
+                elif aggregate == 'min':
+                    y_value = min(float(y_val_0[i]), float(y_val_1[i]))
+                elif aggregate == 'max':
+                    y_value = max(float(y_val_0[i]), float(y_val_1[i]))
 
                 y_val.append(y_value)
 
@@ -353,12 +372,23 @@ def retrieve_current_composite_metric_data(metric, participation, metric_data):
 
     if aggregate == "minus":
         metric_data['value'] = float(values[0]) - float(values[1])
+    elif aggregate == 'timeinter':
+        # represent time as timestamp in seconds
+        c = int(dateutil.parser.parse(values[0].upper()).timestamp())
+        d = int(dateutil.parser.parse(values[1].upper()).timestamp())
+        metric_data['value'] = abs(c - d)
     elif aggregate == "sum":
         metric_data['value'] = sum(values)
     elif aggregate == "mult":
         metric_data['value'] = reduce(lambda x, y: x * y, values)
+    elif aggregate == "div":
+        metric_data['value'] = float(values[0]) / float(values[1])
     elif aggregate == 'avg':
         metric_data['value'] = sum(values) / float(len(values))
+    elif aggregate == 'min':
+        metric_data['value'] = min(float(values[0]), float(values[1]))
+    elif aggregate == 'max':
+        metric_data['value'] = max(float(values[0]), float(values[1]))
 
 
 def get_activity_properties(participation):

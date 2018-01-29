@@ -26,16 +26,6 @@ class NewMetricModal extends Component {
             showGroupby: false,
             grouping: false,
             groupbyTimeFields: [[], []],
-            groupbyFunctions: [
-                {
-                    name: "Sum",
-                    value: "sum"
-                },
-                {
-                    name: "Count",
-                    value: "count"
-                },
-            ],
             toggle: {},
         };
         this.filterCounter = 0;
@@ -287,7 +277,7 @@ class NewMetricModal extends Component {
                     </div>), "activity", "activityDescription"),
 
                 (<FormGroup row key="field" className="animated fadeIn">
-                    <Label for="field" sm={3}>Activity property</Label>
+                    <Label for="field" sm={3}>Activity property <span className="text-danger">*</span></Label>
                     <Col sm={8}>
                         {this.state.properties.length ?
                             (<Input type="select" name="field" id="metricField" defaultValue="" required>
@@ -330,7 +320,7 @@ class NewMetricModal extends Component {
         } else {
             formInputs = [
                 (<FormGroup row key="metric1" className="animated fadeIn">
-                    <Label for="metric1" sm={3}>Metric 1</Label>
+                    <Label for="metric1" sm={3}>Metric 1 <span className="text-danger">*</span></Label>
                     <Col sm={5}>
                         <Input type="select" name="metric" id="metric1"
                                required defaultValue="" onChange={this.changeMetric.bind(this, 0)}>
@@ -347,7 +337,7 @@ class NewMetricModal extends Component {
                 </FormGroup>),
 
                 (<FormGroup row key="metric2" className="animated fadeIn">
-                    <Label for="metric2" sm={3}>Metric 2</Label>
+                    <Label for="metric2" sm={3}>Metric 2 <span className="text-danger">*</span></Label>
                     <Col sm={5}>
                         <Input type="select" name="metric" id="metric2"
                                required defaultValue="" onChange={this.changeMetric.bind(this, 1)}>
@@ -370,13 +360,21 @@ class NewMetricModal extends Component {
                     </div>), "metric", "metricDescription"),
 
                 (<FormGroup row key="aggregate" className="animated fadeIn">
-                    <Label for="aggregate" sm={3}>Operation</Label>
+                    <Label for="aggregate" sm={3}>Operation <span className="text-danger">*</span></Label>
                     <Col sm={8}>
                         <Input type="select" name="aggregate" id="aggregate"
                                required defaultValue="">
                             <option value="">-- Select an operation --</option>
-                            <option value="minus">"-" - Subtraction</option>
-                            <option value="timeinter">Time interval between UTC time values</option>
+                            <option value="sum">[+] Sum</option>
+                            <option value="minus">[-] Subtract</option>
+                            <option value="mult">[*] Multiply</option>
+                            <option value="div">[/] Divide</option>
+                            <option value="avg">[avg] Average</option>
+                            <option value="min">[min] Minimum</option>
+                            <option value="max">[max] Maximum</option>
+                            <option value="timeinter" disabled={!this.state.showGroupby}>
+                                Time interval between UTC time values
+                            </option>
                         </Input>
                     </Col>
                     {this.createDescriptionButton("operation", "operationDescriptionButton")}
@@ -405,9 +403,10 @@ class NewMetricModal extends Component {
                         {this.state.grouping ? [
                             (<Col sm={2} key="group_func" className="animated fadeIn">
                                 <Input type="select" name="group_func" id="groupbyFunc" required>
-                                    {this.state.groupbyFunctions.map((o, i) => (
-                                        <option value={o.value} key={i}>{o.name}</option>
-                                    ))}
+                                    <option value="sum">Sum</option>
+                                    <option value="count">Count</option>
+                                    <option value="min">Min</option>
+                                    <option value="max">Max</option>
                                 </Input>
                             </Col>),
                             (<Col sm={4} key="group_timefield" className="animated fadeIn">
@@ -465,7 +464,7 @@ class NewMetricModal extends Component {
                         <ModalHeader toggle={this.cancel}>New Metric</ModalHeader>
                         <ModalBody>
                             <FormGroup row>
-                                <Label for="metricName" sm={3}>Name</Label>
+                                <Label for="metricName" sm={3}>Name <span className="text-danger">*</span></Label>
                                 <Col sm={8}>
                                     <Input type="text" name="name" id="metricName" onChange={this.changeName} required
                                            placeholder="Please enter a metric name"/>
@@ -473,7 +472,7 @@ class NewMetricModal extends Component {
                             </FormGroup>
 
                             <FormGroup row>
-                                <Label for="metricType" sm={3}>Metric type</Label>
+                                <Label for="metricType" sm={3}>Metric type <span className="text-danger">*</span></Label>
                                 <Col sm={8}>
                                     <Input type="select" name="type" id="metricType"
                                            onChange={e => this.setState({type: e.target.value})}

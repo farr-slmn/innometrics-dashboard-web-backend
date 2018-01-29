@@ -48,6 +48,11 @@ class MetricTile extends Component {
                     this.trend = (val <= up) ? "good" : "bad";
                 }
             }
+            if (Math.abs(val - Math.trunc(val)) > 0.001) {
+                return val.toFixed(3);
+            } else if (Math.trunc(val) === 0) {
+                return val.toFixed(1);
+            }
             return String(val);
         }
         return "-";
