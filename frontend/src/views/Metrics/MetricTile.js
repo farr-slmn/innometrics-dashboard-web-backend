@@ -54,7 +54,7 @@ class MetricTile extends Component {
     }
 
     truncate(string, symbols) {
-        if (!this.state.focused && string.length > symbols) {
+        if (!this.state.focused && string  && string.length > symbols) {
             return string.substring(0, symbols) + '...';
         }
         return string;

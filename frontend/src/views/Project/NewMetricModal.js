@@ -450,9 +450,10 @@ class NewMetricModal extends Component {
 
                 this.createDescriptionRow((
                     <div style={{"marginBottom": "1em"}}>
-                        <code>Raw</code> metrics can be grouped by some time period obtained from selected
-                        activity property. Selected property field should be one of the next field types:
-                        <code>datetime</code>, <code>long</code> (if values represent timestamp)
+                        This option allows to define interval where the metric value
+                        will be interpreted as <code>good</code> (green tile) if it
+                        inside the interval, and <code>bad</code> (red tile) otherwise.
+                        Metric values will be denoted as <code>neutral</code> by default.
                     </div>), "metricBounds", "metricBoundsDescription"),
             ]);
         }
