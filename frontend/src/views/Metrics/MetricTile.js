@@ -71,7 +71,7 @@ class MetricTile extends Component {
                 <Link to={"/project/" + this.projectId + "/metric/" + this.id}
                       style={{color: 'white', textDecoration: 'none'}}>
                     <div className="card-body">
-                        {this.truncate(this.name, 14)}
+                        {this.truncate(this.name, 15)}
                         <h3>{this.truncate(metricValue, 6)}</h3>
                     </div>
                 </Link>
