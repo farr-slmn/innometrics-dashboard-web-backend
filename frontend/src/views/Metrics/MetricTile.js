@@ -59,7 +59,7 @@ class MetricTile extends Component {
     }
 
     truncate(string, symbols) {
-        if (!this.state.focused && string  && string.length > symbols) {
+        if (!this.state.focused && string && string.length > symbols) {
             return string.substring(0, symbols) + '...';
         }
         return string;
@@ -70,17 +70,18 @@ class MetricTile extends Component {
         let trendClass = this.trend === "good" ? "bg-success" : this.trend === "bad" ? "bg-danger" : "bg-info";
 
         return (
-            <Card className={"metric-tile " + trendClass}
-                  onMouseOut={() => this.mouseOut()}
-                  onMouseOver={() => this.mouseOver()}>
-                <Link to={"/project/" + this.projectId + "/metric/" + this.id}
-                      style={{color: 'white', textDecoration: 'none'}}>
-                    <div className="card-body">
-                        {this.truncate(this.name, 15)}
-                        <h3>{this.truncate(metricValue, 6)}</h3>
+            <Link to={"/project/" + this.projectId + "/metric/" + this.id}
+                  style={{color: 'white', textDecoration: 'none'}}>
+                <Card className={"metric-tile card-block text-white " + trendClass}
+                      onMouseOut={() => this.mouseOut()}
+                      onMouseOver={() => this.mouseOver()}>
+                    <div className={"h5 text-right mb-2 " + trendClass}>
+                        {/*<i className="icon-arrow-down"/>*/}
                     </div>
-                </Link>
-            </Card>
+                    <div className="h4 mb-0">{this.truncate(metricValue, 6)}</div>
+                    <small className="text-muted text-uppercase font-weight-bold">{this.truncate(this.name, 15)}</small>
+                </Card>
+            </Link>
         )
     }
 }
