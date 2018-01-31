@@ -55,7 +55,7 @@ class Header extends Component {
         <NavbarToggler className="d-lg-none" onClick={this.mobileSidebarToggle}>
           <span className="icon-menu"/>
         </NavbarToggler>
-        <NavbarBrand href="#" style={{marginRight: "1em"}}>
+        <NavbarBrand href="#" className="mr-1">
           <span className="icon-chart text-primary"/>
           <span style={{fontFamily: 'Roboto, sans-serif'}}> Innometrics </span>
         </NavbarBrand>
@@ -63,12 +63,12 @@ class Header extends Component {
           <span className="icon-menu"/>
         </NavbarToggler>
         <NavItem>
-          <Button color="warning" style={{paddingRight: "2em", marginRight: "1em"}}>
-            Warnings <Badge color="light" style={{marginRight: "2em"}}>3</Badge>
+          <Button color="warning" className="pr-4 mr-2">
+            Warnings <Badge color="light" className="mr-2">3</Badge>
           </Button>
         </NavItem>
         <NavItem>
-          <Button outline color="danger" style={{paddingRight: "2em"}}>
+          <Button outline color="danger" className="pr-4">
             Critical <Badge color="light">0</Badge>
           </Button>
         </NavItem>

@@ -34,7 +34,7 @@ urlpatterns = [
 
     # for dashboards:
     url(r'^dashboard/', include('dash.urls')),
-    url(r'^dash_react/', login_required(TemplateView.as_view(template_name="dash_react.html"))),
+    url(r'^dash_react/', TemplateView.as_view(template_name="dash_react.html")),
 
     url(r'^projects/', include('projects.urls')),
 

@@ -79,7 +79,7 @@ class MetricTile extends Component {
                         {/*<i className="icon-arrow-down"/>*/}
                     </div>
                     <div className="h4 mb-0">{this.truncate(metricValue, 6)}</div>
-                    <small className="text-muted text-uppercase font-weight-bold">{this.truncate(this.name, 15)}</small>
+                    <h6 className="text-muted text-uppercase font-weight-bold">{this.truncate(this.name, 10)}</h6>
                 </Card>
             </Link>
         )
