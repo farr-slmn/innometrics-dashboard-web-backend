@@ -5,7 +5,7 @@ import cookie from "react-cookie";
 class Register extends Component {
   render() {
     let links = {
-      register: "/register/",
+      register: "/dash_register/",
     };
 
     return (
@@ -17,24 +17,28 @@ class Register extends Component {
                 <h1>Register</h1>
                 <p className="text-muted">Create your account</p>
                 <Form action={links.register} method="POST">
-                  <InputGroup className="mb-3">
+                  <InputGroup>
                     <InputGroupAddon><i className="icon-user"/></InputGroupAddon>
                     <Input name="username" type="text" placeholder="Username"/>
                   </InputGroup>
-                  <InputGroup className="mb-3">
+                  <div className="text-danger">{window.form_username_errors}</div>
+                  <InputGroup className="mt-3">
                     <InputGroupAddon>@</InputGroupAddon>
                     <Input name="email" type="text" placeholder="Email"/>
                   </InputGroup>
-                  <InputGroup className="mb-3">
+                  <div className="text-danger">{window.form_email_errors}</div>
+                  <InputGroup className="mt-3">
                     <InputGroupAddon><i className="icon-lock"/></InputGroupAddon>
-                    <Input name="password" type="password" placeholder="Password"/>
+                    <Input name="password1" type="password" placeholder="Password"/>
                   </InputGroup>
-                  <InputGroup className="mb-4">
+                  <div className="text-danger">{window.form_password1_errors}</div>
+                  <InputGroup className="mt-3">
                     <InputGroupAddon><i className="icon-lock"/></InputGroupAddon>
-                    <Input name="password_repeat" type="password" placeholder="Repeat password"/>
+                    <Input name="password2" type="password" placeholder="Repeat password"/>
                   </InputGroup>
+                  <div className="text-danger">{window.form_password2_errors}</div>
                   <Input name="csrfmiddlewaretoken" type="hidden" value={cookie.load('csrftoken')}/>
-                  <Button color="primary" block>Create Account</Button>
+                  <Button className="mt-4" color="primary" block>Create Account</Button>
                 </Form>
               </Card>
             </Col>

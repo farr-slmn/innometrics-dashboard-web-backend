@@ -1,17 +1,45 @@
 import os
 
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.shortcuts import render
-from django.http import HttpResponse, Http404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.http import HttpResponse, Http404
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from rest_framework import status, generics, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from activities.models import Activity, Entity
-from activities.serializers import ActivitySerializer, UserSerializer, EntitySerializer
+from activities.serializers import ActivitySerializer, UserSerializer
 from projects.models import UserParticipation
+
+
+class UserCreateForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self, commit=True):
+        user = super(UserCreateForm, self).save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+            UserParticipation(user=user).save()
+        return user
+
+
+def register_view(request):
+    form = None
+    if request.method == 'POST':
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('main'))
+    return render(request, 'dash_react.html', {'form': form, 'view_page': 'register'})
 
 
 class DownloadList(APIView):

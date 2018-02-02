@@ -13,7 +13,7 @@ class Dashboard extends Component {
         this.state = {
             projects: [],
             defaultProjectId: undefined,
-            redirect: false,
+            redirect: !Boolean(window.user_name),
         };
 
         this.defaultProjectRedirect = this.defaultProjectRedirect.bind(this);
@@ -28,6 +28,9 @@ class Dashboard extends Component {
     }
 
     componentWillMount() {
+        if (this.state.redirect) {
+            return;
+        }
         fetch(this.links.projects, {credentials: "same-origin"})
             .then(response => {
                 if (response && response.status === 401) {

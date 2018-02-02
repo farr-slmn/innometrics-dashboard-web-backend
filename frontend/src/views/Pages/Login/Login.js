@@ -1,13 +1,17 @@
 import React, {Component} from 'react';
 import {Button, Card, CardGroup, Col, Container, Form, Input, InputGroup, InputGroupAddon, Row} from 'reactstrap';
 import cookie from "react-cookie";
-import {Link} from "react-router-dom";
+import {Link, Redirect} from "react-router-dom";
 
 
 class Login extends Component {
   render() {
-    let loginLink = "/api-auth/login/";
+    let loginLink = "/dash_login/";
     let registerRoute = "/register";
+
+    if (window.view_page === "register") {
+      return <Redirect to={registerRoute}/>;
+    }
 
     return (
       <div className="app flex-row align-items-center animated fadeIn">
@@ -19,21 +23,24 @@ class Login extends Component {
                   <h2>Login</h2>
                   <p className="text-muted">Sign In to your account</p>
                   <Form action={loginLink} method="POST">
-                    <InputGroup className="mb-3">
+                    <InputGroup>
                       <InputGroupAddon><i className="icon-user"/></InputGroupAddon>
                       <Input name="username" type="text" placeholder="Username"/>
                     </InputGroup>
-                    <InputGroup className="mb-4">
+                    <div className="text-danger">{window.form_username_errors}</div>
+                    <InputGroup className="mt-3">
                       <InputGroupAddon><i className="icon-lock"/></InputGroupAddon>
                       <Input name="password" type="password" placeholder="Password"/>
                     </InputGroup>
+                    <div className="text-danger">{window.form_password_errors}</div>
+                    <div className="text-danger">{window.form_non_field_errors}</div>
                     <Input name="csrfmiddlewaretoken" type="hidden" value={cookie.load('csrftoken')}/>
-                    <Row>
+                    <Row className="mt-4">
                       <Col xs="6">
                         <Button color="primary" className="px-4">Login</Button>
                       </Col>
                       <Col xs="6" className="text-right">
-                        <Button color="link" className="px-0">Forgot password?</Button>
+                        <Button disabled color="link" className="px-0">Forgot password?</Button>
                       </Col>
                     </Row>
                   </Form>

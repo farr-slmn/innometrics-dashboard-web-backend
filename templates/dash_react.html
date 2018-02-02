@@ -7,8 +7,15 @@
   </head>
   <body class="app header-fixed sidebar-fixed aside-menu-fixed aside-menu-hidden">
     <script type="text/javascript">
+      var view_page = "{{ view_page }}";
       var user_name = "{{user.get_username}}";
       var user_email = "{{user.email}}";
+      var form_non_field_errors = "{{ form.non_field_errors|striptags }}";
+      var form_username_errors = "{{ form.username.errors|striptags }}";
+      var form_password_errors = "{{ form.password.errors|striptags }}";
+      var form_email_errors = "{{ form.email.errors|striptags }}";
+      var form_password1_errors = "{{ form.password1.errors|striptags }}";
+      var form_password2_errors = "{{ form.password2.errors|striptags }}";
     </script>
     <div id="root"></div>
     {% render_bundle 'index' %}

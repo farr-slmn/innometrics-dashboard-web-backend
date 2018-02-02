@@ -116,7 +116,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
@@ -170,7 +169,7 @@ STATIC_ROOT = './static/'
 STATIC_URL = '/static/'
 
 
-LOGIN_URL = '/api-auth/login/'
+LOGIN_URL = '/dash_react/'
 LOGIN_REDIRECT_URL = '/dash_react/'
 LOGOUT_REDIRECT_URL = '/'
 
