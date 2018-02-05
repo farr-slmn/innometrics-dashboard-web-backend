@@ -23,7 +23,7 @@ class MetricsContainer extends Component {
             metricDelete: "/projects/metrics/"
         };
         this.routes = {
-            metric: "/project/" + props.projId + "/metric/"
+            metric: "/dashboard/project/" + props.projId + "/metric/"
         }
     }
 

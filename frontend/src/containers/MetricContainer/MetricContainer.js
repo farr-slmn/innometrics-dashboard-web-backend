@@ -11,11 +11,15 @@ class MetricContainer extends Component {
         this.projId = props.projId;
         this.state = props.metric;
         this.state['loading'] = true;
+
+        this.links = {
+            metricData: '/projects/metrics/' + this.state.id + '/data/',
+        }
     }
 
     componentDidMount() {
         if (!this.state.x_values && !this.state.measurements) {
-            let url = '/projects/metrics/' + this.state.id + '/data/';
+            let url = this.links.metricData;
             if (Number.isInteger(this.projId)) {
                 url += '?project=' + this.projId;
             }

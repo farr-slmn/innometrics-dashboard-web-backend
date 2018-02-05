@@ -44,11 +44,6 @@ class Header extends Component {
     document.body.classList.toggle('sidebar-mobile-show');
   }
 
-  asideToggle(e) {
-    e.preventDefault();
-    document.body.classList.toggle('aside-menu-hidden');
-  }
-
   render() {
     return (
       <Navbar className="app-header" style={{listStyle: "none"}}>

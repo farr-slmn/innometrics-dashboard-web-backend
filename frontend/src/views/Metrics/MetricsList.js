@@ -7,6 +7,14 @@ import {Button} from "reactstrap";
 
 class MetricsList extends Component {
 
+    constructor(props) {
+        super(props);
+
+        this.routes = {
+            metric: "/dashboard/project/" + this.props.projId + "/metric/",
+        };
+    }
+
     static tableHeaders(metric) {
         if (metric) {
             let headFields = Object.keys(metric).map((field, idx) => (
@@ -50,7 +58,7 @@ class MetricsList extends Component {
                       let value = metric[key];
                       if (key === "name") {
                           value = (
-                            <Link to={"/project/" + this.props.projId + "/metric/" + metric.id}>{value}</Link>
+                            <Link to={this.routes.metric + metric.id}>{value}</Link>
                           );
                       }
                       if (key === "info") {

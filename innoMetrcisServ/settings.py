@@ -169,8 +169,8 @@ STATIC_ROOT = './static/'
 STATIC_URL = '/static/'
 
 
-LOGIN_URL = '/dash_react/'
-LOGIN_REDIRECT_URL = '/dash_react/'
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/#/dashboard'
 LOGOUT_REDIRECT_URL = '/'
 
 # Uncomment when deploying in heroku

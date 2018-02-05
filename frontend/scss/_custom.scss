@@ -13,6 +13,43 @@
   transform: scale(1.1);
   min-width: 150px;
   position: absolute;
+  z-index: 1000;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   margin: 0 auto;
+}
+
+#banner-wrapper {
+  width: 100%;
+  padding: 10em;
+  background-image: url(../public/img/pic.jpg);
+  background-position: center;
+  background-size: cover;
+}
+
+#banner {
+  overflow: hidden;
+  width: 75%;
+  text-align: center;
+  color: rgba(255, 255, 255, .7);
+  font-size: 1.5em;
+  background: rgba(1, 1, 1, 0.5);
+  padding: 1em;
+}
+
+#banner h2 {
+  font-weight: 400;
+  font-size: 3em;
+  color: #FFF;
+}
+
+.os {
+  display: inline-block;
+  margin-bottom: 0.5em;
+  width: 3em;
+  height: 3em;
+  line-height: 3em;
+  font-size: 2em;
+  color: white;
+  background: #00b3ee;
+  border-radius: 20%;
 }

@@ -13,7 +13,6 @@ router = Router()
 
 urlpatterns = [
     # intro and installation info:
-    url(r'^$', views.DownloadList.as_view()),
     url(r'^downloadables/$', views.DownloadList.as_view()),
     url(r'^downloadables/(?P<path>.+)$', views.DownloadList.as_view()),
 
@@ -25,6 +24,7 @@ urlpatterns = [
     # applications:
     url(r'^measurements/', include('measurements.urls')),
     url(r'^', include('activities.urls')),
+    url(r'^projects/', include('projects.urls')),
 
     # registration and authentication:
     url(r'^api-auth/', include('rest_framework.urls',
@@ -34,11 +34,8 @@ urlpatterns = [
 
     # for dashboards:
     url(r'^dashboard/', include('dash.urls')),
-    url(r'^dash_react/', TemplateView.as_view(template_name="dash_react.html"), name='main'),
     url(r'^dash_login/', auth_views.login, {'template_name': 'dash_react.html'}, name='dash_login'),
     url(r'^dash_register/', views.register_view, name='dash_register'),
+    url(r'^', TemplateView.as_view(template_name="dash_react.html"), name='main'),
 
-    url(r'^projects/', include('projects.urls')),
-
-    url(r'^', include('dash.contrib.apps.public_dashboard.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

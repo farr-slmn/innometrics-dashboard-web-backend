@@ -18,6 +18,10 @@ class MetricTile extends Component {
         this.mouseOut = this.mouseOut.bind(this);
         this.mouseOver = this.mouseOver.bind(this);
         this.truncate = this.truncate.bind(this);
+
+        this.routes = {
+            metric: "/dashboard/project/" + this.projectId + "/metric/",
+        };
     }
 
     mouseOut() {
@@ -67,10 +71,15 @@ class MetricTile extends Component {
 
     render() {
         let metricValue = this.getMetricValue();
+        if (metricValue === "-") {
+            metricValue = (<span className="fa fa-circle-o-notch fa-spin"/>);
+        } else {
+            metricValue = this.truncate(metricValue, 6);
+        }
         let trendClass = this.trend === "good" ? "bg-success" : this.trend === "bad" ? "bg-danger" : "bg-info";
 
         return (
-            <Link to={"/project/" + this.projectId + "/metric/" + this.id}
+            <Link to={this.routes.metric + this.id}
                   style={{color: 'white', textDecoration: 'none'}}>
                 <Card className={"metric-tile card-block text-white " + trendClass}
                       onMouseOut={() => this.mouseOut()}
@@ -78,7 +87,7 @@ class MetricTile extends Component {
                     <div className={"h5 text-right mb-2 " + trendClass}>
                         {/*<i className="icon-arrow-down"/>*/}
                     </div>
-                    <div className="h4 mb-0">{this.truncate(metricValue, 6)}</div>
+                    <div className="h4 mb-0">{metricValue}</div>
                     <h6 className="text-muted text-uppercase font-weight-bold">{this.truncate(this.name, 10)}</h6>
                 </Card>
             </Link>

@@ -23,7 +23,8 @@ class Dashboard extends Component {
         };
         this.routes = {
             login: "/login",
-            project: "/project/",
+            dashboard: "/dashboard",
+            project: "/dashboard/project/",
         };
     }
 
@@ -53,11 +54,15 @@ class Dashboard extends Component {
             });
     }
 
+    componentDidMount() {
+        document.title = "Innometrcs - Dashboard";
+    }
+
     defaultProjectRedirect(id) {
         if (id || id === 0) {
             return (
                 <Switch>
-                  <Redirect exact from="/" to={this.routes.project + id}/>
+                  <Redirect exact from={this.routes.dashboard} to={this.routes.project + id}/>
                 </Switch>
             );
         }

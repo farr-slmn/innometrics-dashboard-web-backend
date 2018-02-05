@@ -31,12 +31,12 @@ class Project extends Component {
         };
 
         this.routes = {
-            project: "/project/" + this.proj.id,
-            tabGeneral: "/project/" + this.proj.id + "/general/",
-            tabMembers: "/project/" + this.proj.id + "/members/",
-            tabActivities: "/project/" + this.proj.id + "/activities/",
-            tabMetrics: "/project/" + this.proj.id + "/metric/",
-            tabPreferences: "/project/" + this.proj.id + "/preferences/",
+            project: "/dashboard/project/" + this.proj.id,
+            tabGeneral: "/dashboard/project/" + this.proj.id + "/general/",
+            tabMembers: "/dashboard/project/" + this.proj.id + "/members/",
+            tabActivities: "/dashboard/project/" + this.proj.id + "/activities/",
+            tabMetrics: "/dashboard/project/" + this.proj.id + "/metric/",
+            tabPreferences: "/dashboard/project/" + this.proj.id + "/preferences/",
         };
     }
 
