@@ -7,7 +7,6 @@
   </head>
   <body class="header-fixed sidebar-fixed">
     <script type="text/javascript">
-      var view_page = "{{ view_page }}";
       var user_name = "{{user.get_username}}";
       var user_email = "{{user.email}}";
       var form_non_field_errors = "{{ form.non_field_errors|striptags }}";
@@ -16,6 +15,9 @@
       var form_email_errors = "{{ form.email.errors|striptags }}";
       var form_password1_errors = "{{ form.password1.errors|striptags }}";
       var form_password2_errors = "{{ form.password2.errors|striptags }}";
+      {% if anchor %}
+          window.location = "#/{{ anchor }}";
+      {% endif %}
     </script>
     <div id="root"></div>
     {% render_bundle 'index' %}

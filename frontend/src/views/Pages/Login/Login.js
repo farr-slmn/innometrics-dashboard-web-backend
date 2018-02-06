@@ -1,17 +1,13 @@
 import React, {Component} from 'react';
 import {Button, Card, CardGroup, Col, Container, Form, Input, InputGroup, InputGroupAddon, Row} from 'reactstrap';
 import cookie from "react-cookie";
-import {Link, Redirect} from "react-router-dom";
+import {Link} from "react-router-dom";
 
 
 class Login extends Component {
   render() {
     let loginLink = "/dash_login/";
     let registerRoute = "/register";
-
-    if (window.view_page === "register") {
-      return <Redirect to={registerRoute}/>;
-    }
 
     return (
       <div className="app flex-row align-items-center animated fadeIn">

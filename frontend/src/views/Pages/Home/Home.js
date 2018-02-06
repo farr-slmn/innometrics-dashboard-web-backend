@@ -11,7 +11,8 @@ class Home extends Component {
         super(props);
 
         this.routes = {
-            installation: "/installation"
+            installation: "/installation",
+            register: "/register",
         };
     }
 
@@ -20,7 +21,6 @@ class Home extends Component {
     }
 
     render() {
-
         return (
             <div className="app bg-white">
                 <Header/>

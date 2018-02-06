@@ -1,8 +1,10 @@
 import os
 
 from django import forms
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
@@ -37,9 +39,20 @@ def register_view(request):
     if request.method == 'POST':
         form = UserCreateForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect(reverse('main'))
-    return render(request, 'dash_react.html', {'form': form, 'view_page': 'register'})
+            user = form.save()
+            auth_login(request, user)
+            return redirect(reverse('main') + '#/dashboard')
+    return render(request, 'dash_react.html', {'form': form, 'anchor': 'register'})
+
+
+class CustomLoginView(LoginView):
+    template_name = 'dash_react.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CustomLoginView, self).get_context_data(**kwargs)
+        if not context['form'].is_valid():
+            context['anchor'] = 'login'
+        return context
 
 
 class DownloadList(APIView):

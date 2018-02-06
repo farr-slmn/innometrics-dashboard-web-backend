@@ -169,7 +169,7 @@ STATIC_ROOT = './static/'
 STATIC_URL = '/static/'
 
 
-LOGIN_URL = '/'
+LOGIN_URL = '/#/login'
 LOGIN_REDIRECT_URL = '/#/dashboard'
 LOGOUT_REDIRECT_URL = '/'
 

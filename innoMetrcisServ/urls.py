@@ -2,7 +2,6 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.views.generic import TemplateView
 from rest_framework.authtoken import views as rest_views
 
@@ -34,7 +33,7 @@ urlpatterns = [
 
     # for dashboards:
     url(r'^dashboard/', include('dash.urls')),
-    url(r'^dash_login/', auth_views.login, {'template_name': 'dash_react.html'}, name='dash_login'),
+    url(r'^dash_login/', views.CustomLoginView.as_view(), name='dash_login'),
     url(r'^dash_register/', views.register_view, name='dash_register'),
     url(r'^', TemplateView.as_view(template_name="dash_react.html"), name='main'),
 
