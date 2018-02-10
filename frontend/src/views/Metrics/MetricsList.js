@@ -73,7 +73,7 @@ class MetricsList extends Component {
               <td>
                 <Button color="link" onClick={this.del.bind(this, metric.id)}
                         disabled={this.dependent.bind(this)(metric.id).length > 0}>
-                  <i className="icon-close text-danger"/>
+                  <i className={"icon-close" + (this.dependent.bind(this)(metric.id).length === 0 ? " text-danger" : "")}/>
                 </Button>
               </td>
           </tr>

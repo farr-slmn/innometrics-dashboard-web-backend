@@ -3,6 +3,7 @@ import MetricTable from "../../views/Metrics/MetricTable";
 import MetricChart from "../../views/Metrics/MetricChart";
 import MetricTile from "../../views/Metrics/MetricTile";
 import {SyncLoader} from "react-spinners";
+import {Redirect} from "react-router-dom";
 
 
 class MetricContainer extends Component {
@@ -14,7 +15,10 @@ class MetricContainer extends Component {
 
         this.links = {
             metricData: '/projects/metrics/' + this.state.id + '/data/',
-        }
+        };
+        this.routes = {
+            login: "/login",
+        };
     }
 
     componentDidMount() {
@@ -25,7 +29,15 @@ class MetricContainer extends Component {
             }
             this.setState({loading: true});
             fetch(url, {credentials: "same-origin"})
-                .then(results => results.json())
+                .then(response => {
+                    if (response && response.status === 401) {
+                        this.setState({redirect: true});
+                    } else if (!response || response.status !== 200) {
+                        window.alert("Bad response from server: " + response.status);
+                        console.log(response);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     this.setState({
                         measurements: data.measurements,
@@ -43,6 +55,10 @@ class MetricContainer extends Component {
     }
 
     render() {
+        if (this.state.redirect) {
+            return <Redirect to={this.routes.login}/>;
+        }
+
         if (this.state.type === 'C') {
 
             this.components = [

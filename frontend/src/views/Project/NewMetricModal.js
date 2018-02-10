@@ -14,6 +14,7 @@ import {
     Row
 } from "reactstrap";
 import cookie from 'react-cookie';
+import {Redirect} from "react-router-dom";
 
 class NewMetricModal extends Component {
     constructor(props) {
@@ -40,6 +41,9 @@ class NewMetricModal extends Component {
         let project = Number.isInteger(props.projId) ? '?project=' + props.projId : '';
         this.links = {
             metrics: '/projects/metrics/' + project,
+        };
+        this.routes = {
+            login: "/login",
         };
     }
 
@@ -196,7 +200,15 @@ class NewMetricModal extends Component {
             },
             body: JSON.stringify(submitObj)
         })
-            .then(results => results.json())
+            .then(response => {
+                if (response && response.status === 401) {
+                    this.setState({redirect: true});
+                } else if (!response || (response.status !== 200 && response.status !== 201)) {
+                    window.alert("Bad response from server: " + response.status);
+                    console.log(response);
+                }
+                return response.json();
+            })
             .then(data => this.props.callbk(data));
 
         this.cancel();
@@ -254,6 +266,10 @@ class NewMetricModal extends Component {
     }
 
     render() {
+        if (this.state.redirect) {
+            return <Redirect to={this.routes.login}/>;
+        }
+
         let formInputs;
         if (this.state.type === "R") {
             formInputs = [

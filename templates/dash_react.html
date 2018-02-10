@@ -18,6 +18,7 @@
       {% if anchor %}
           window.location = "#/{{ anchor }}";
       {% endif %}
+      var csrf = "{{ csrf_token }}";
     </script>
     <div id="root"></div>
     {% render_bundle 'index' %}

@@ -17,6 +17,7 @@ class Project extends Component {
             metrics: [],
             newMetricModal: false,
             loading: false,
+            redirect: false,
         };
 
         this.toggle = this.toggle.bind(this);
@@ -31,6 +32,7 @@ class Project extends Component {
         };
 
         this.routes = {
+            login: "/login",
             project: "/dashboard/project/" + this.proj.id,
             tabGeneral: "/dashboard/project/" + this.proj.id + "/general/",
             tabMembers: "/dashboard/project/" + this.proj.id + "/members/",
@@ -44,7 +46,15 @@ class Project extends Component {
         let url = this.links.metrics;
         this.setState({loading: true});
         fetch(url, {credentials: "same-origin"})
-            .then(results => results.json())
+            .then(response => {
+                if (response && response.status === 401) {
+                    this.setState({redirect: true});
+                } else if (!response || response.status !== 200) {
+                    window.alert("Bad response from server: " + response.status);
+                    console.log(response);
+                }
+                return response.json();
+            })
             .then(data => {
                 this.setState({
                     metrics: data.metrics,
@@ -56,7 +66,15 @@ class Project extends Component {
         // retrieve activities and activities properties for autocomplete
         url = this.links.activities;
         fetch(url, {credentials: "same-origin"})
-            .then(results => results.json())
+            .then(response => {
+                if (response && response.status === 401) {
+                    this.setState({redirect: true});
+                } else if (!response || response.status !== 200) {
+                    window.alert("Bad response from server: " + response.status);
+                    console.log(response);
+                }
+                return response.json();
+            })
             .then(data => {
                 this.setState({
                     activities: data.activities,
@@ -67,7 +85,15 @@ class Project extends Component {
     loadMetricValues() {
         let url = this.links.metricsValues;
         fetch(url, {credentials: "same-origin"})
-            .then(results => results.json())
+            .then(response => {
+                if (response && response.status === 401) {
+                    this.setState({redirect: true});
+                } else if (!response || response.status !== 200) {
+                    window.alert("Bad response from server: " + response.status);
+                    console.log(response);
+                }
+                return response.json();
+            })
             .then(data => {
                 this.setState({
                     metrics: data.metrics,
@@ -97,6 +123,9 @@ class Project extends Component {
     }
 
     render() {
+        if (this.state.redirect) {
+            return <Redirect to={this.routes.login}/>;
+        }
 
         return (
             <div>

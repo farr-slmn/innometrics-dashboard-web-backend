@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import MetricsList from "../../views/Metrics/MetricsList";
 import MetricContainer from "./MetricContainer";
-import {Link, Route, Switch} from "react-router-dom";
+import {Link, Redirect, Route, Switch} from "react-router-dom";
 import cookie from "react-cookie";
 import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "reactstrap";
 
@@ -23,14 +23,15 @@ class MetricsContainer extends Component {
             metricDelete: "/projects/metrics/"
         };
         this.routes = {
-            metric: "/dashboard/project/" + props.projId + "/metric/"
-        }
+            metric: "/dashboard/project/" + props.projId + "/metric/",
+            login: "/login",
+        };
     }
 
     deleteMetric() {
         this.modalDeleteToggle();
         let metricId = this.state.metricToDelete.id;
-        let url = this.links.metricDelete + metricId;
+        let url = this.links.metricDelete + metricId + "/";
         let headers = {
             credentials: "same-origin",
             method: "DELETE",
@@ -40,14 +41,17 @@ class MetricsContainer extends Component {
                 'X-CSRFToken': cookie.load('csrftoken'),
             }
         };
-        fetch(url, headers).then(response => {
-            if (response && response.status === 200) {
-                this.props.deleteAction(metricId);
-            } else {
-                window.alert("Bad response from server: " + response.status);
-                console.log(response);
-            }
-        });
+        fetch(url, headers)
+            .then(response => {
+                if (response && response.status === 401) {
+                    this.setState({redirect: true});
+                } else if (!response || response.status !== 200) {
+                    window.alert("Bad response from server: " + response.status);
+                    console.log(response);
+                }
+                return response.json();
+            })
+            .then(() => this.props.deleteAction(metricId));
     }
 
     deleteMetricConfirm(metricId) {
@@ -64,6 +68,10 @@ class MetricsContainer extends Component {
     }
 
     render() {
+        if (this.state.redirect) {
+            return <Redirect to={this.routes.login}/>;
+        }
+
         let metricContainers = this.props.metrics.map(metric => (
           <Route key={"metric_" + metric.id} path={this.routes.metric + metric.id}>
             <div className="animated fadeIn">
