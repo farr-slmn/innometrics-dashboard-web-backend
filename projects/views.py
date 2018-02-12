@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from projects.models import Project, UserParticipation, Metric
 from projects.serializers import ProjectSerializer, MetricSerializer
 from projects.services import retrieve_current_metrics, retrieve_metric_data, \
-    retrieve_current_metric_data, get_activity_properties
+    retrieve_current_metric_data, get_activity_properties, add_test_examples
 
 
 class ProjectList(generics.ListAPIView):
@@ -18,6 +18,7 @@ class ProjectList(generics.ListAPIView):
         for the currently authenticated user.
         """
         user = self.request.user
+        add_test_examples(user.id)
         return Project.objects.filter(participations__user=user)
 
 

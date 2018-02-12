@@ -71,7 +71,7 @@ class MetricTile extends Component {
 
     render() {
         let metricValue = this.getMetricValue();
-        if (metricValue === "-") {
+        if (metricValue === "-" && this.props.metric.value !== null) {
             metricValue = (<span className="fa fa-circle-o-notch fa-spin"/>);
         } else {
             metricValue = this.truncate(metricValue, 6);

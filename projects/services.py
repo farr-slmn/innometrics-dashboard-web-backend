@@ -1,3 +1,4 @@
+import random as rnd
 import time
 from collections import defaultdict
 from datetime import date
@@ -6,12 +7,13 @@ from itertools import groupby
 
 import dateutil
 import dateutil.parser
+from django.db import transaction
 from django.db.models import Q, F
 from django.forms import model_to_dict
 
-from activities.models import Entity
+from activities.models import Entity, Activity
 from measurements.models import Measurement
-from projects.models import Metric
+from projects.models import Metric, UserParticipation
 
 DAY_SEC = 24 * 60 * 60
 
@@ -563,3 +565,61 @@ def get_activity_properties(participation):
         result.append({'name': k, 'properties': list(properties)})
 
     return list(result)
+
+
+def add_test_examples(user_id):
+    """
+    Creates test activities, measurements and metric examples in default project for user.
+    If the user already has such activities then does nothing.
+
+    :param user_id: user id
+    """
+    example_activity = "Test Activity Example"
+    test_examples = Activity.objects.filter(entity__name=example_activity, participation__user=user_id)
+    if test_examples.count() == 0:
+        with transaction.atomic():
+            part = UserParticipation.objects.get(user=user_id, project=None)
+            e, created = Entity.objects.get_or_create(name=example_activity)
+
+            # activities for 10 days
+            for i in range(10):
+                cur_day_timestamp = int(time.time() / DAY_SEC - i) * DAY_SEC
+
+                # ten activities per day
+                for j in range(10):
+                    a = Activity(participation=part, entity=e)
+                    a.save()
+
+                    start_time = cur_day_timestamp + rnd.randint(9 * 60 * 60, 18 * 60 * 60)
+                    end_time = start_time + rnd.randint(60 * 60, 2 * 60 * 60)
+
+                    Measurement(type='int', name='int property 1', value=str(rnd.randint(0, 100)), activity=a).save()
+                    Measurement(type='int', name='int property 2', value=str(rnd.randint(0, 100)), activity=a).save()
+                    Measurement(type='long', name='start time', value=str(start_time * 1000), activity=a).save()
+                    Measurement(type='long', name='end time', value=str(end_time * 1000), activity=a).save()
+
+            p1 = Metric(name='Tst activity prop 1', type=Metric.RAW, participation=part,
+                        info={"field": "int property 1", "filters": {}, "activity": example_activity})
+            p2 = Metric(name='Tst activity prop 2', type=Metric.RAW, participation=part,
+                        info={"field": "int property 2", "filters": {}, "activity": example_activity})
+            p1.save()
+            p2.save()
+
+            c1 = Metric(name='Tst props diff', type=Metric.COMPOSITE, participation=part,
+                        info={"bounds": {}, "groupby": {}, "aggregate": "minus", "components": [p1.id, p2.id]})
+            c2 = Metric(name='Tst diff by day', type=Metric.COMPOSITE, participation=part,
+                        info={"bounds": {"lower": 20, "upper": 80},
+                              "groupby": {"group_func": "sum", "group_type": "day", "group_timefield": "start time"},
+                              "aggregate": "minus", "components": [p1.id, p2.id]})
+            c3 = Metric(name='Tst diff by 3 days', type=Metric.COMPOSITE, participation=part,
+                        info={"bounds": {},
+                              "groupby": {"group_func": "sum", "group_type": "3_days", "group_timefield": "start time"},
+                              "aggregate": "minus", "components": [p1.id, p2.id]})
+            c1.save()
+            c2.save()
+            c3.save()
+
+            c4 = Metric(name='Tst diff mult', type=Metric.COMPOSITE, participation=part,
+                        info={"bounds": {"lower": 0, "upper": 1000000}, "groupby": {}, "aggregate": "mult",
+                              "components": [c2.id, c2.id]})
+            c4.save()

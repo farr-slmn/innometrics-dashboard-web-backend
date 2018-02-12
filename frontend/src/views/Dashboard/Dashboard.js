@@ -45,7 +45,7 @@ class Dashboard extends Component {
             .then(data => {
                 data.results.unshift({
                     id: "all",
-                    name: "(Default)",
+                    name: "[Personal Dashboard]",
                 });
                 this.setState({
                     projects: data.results,

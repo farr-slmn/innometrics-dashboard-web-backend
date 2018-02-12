@@ -143,9 +143,10 @@ class Project extends Component {
                     </li>
                     <li className="nav-item">
                         {/* disable link for default project */}
-                        <NavLink to={this.routes.tabMembers} className="nav-link"
-                                 style={Number.isInteger(this.proj.id) ? {} : {pointerEvents: 'none'}}
+                        {Number.isInteger(this.proj.id) ? (
+                            <NavLink to={this.routes.tabMembers} className="nav-link"
                                  activeClassName="active">Project members</NavLink>
+                        ): null}
                     </li>
                     <li className="nav-item">
                         <NavLink to={this.routes.tabActivities} className="nav-link"
