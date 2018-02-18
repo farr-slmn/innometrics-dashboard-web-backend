@@ -26,6 +26,10 @@ class NewMetricModal extends Component {
             properties: [],
             showGroupby: false,
             grouping: false,
+            metricsChosen: [null, null],
+            groupingFixed: false,
+            fixedDefaults: {group_type: "", group_func: "sum"},
+            groupbyTypes: [null, null],
             groupbyTimeFields: [[], []],
             toggle: {},
         };
@@ -89,18 +93,49 @@ class NewMetricModal extends Component {
     }
 
     changeMetric(idx, metric) {
+        this.setState({showGroupby: false});
         let newState = {
             groupbyTimeFields: this.state.groupbyTimeFields,
+            groupbyTypes: this.state.groupbyTypes,
+            metricsChosen: this.state.metricsChosen,
+            fixedDefaults: {group_type: "", group_func: "sum"},
+            grouping: false,
         };
         newState.groupbyTimeFields[idx] = [];
+        newState.groupbyTypes[idx] = null;
+        newState.metricsChosen[idx] = null;
         let metricId = metric.target.value;
-        if (metricId || (metricId == 0)) {
+        if (metricId || (metricId === "0")) {
             let m = this.props.metrics.find(m => m.id == metricId);
+            newState.metricsChosen[idx] = m.id;
+            newState.groupbyTypes[idx] = m.type;
             if (m && (m.type === "R")) {
                 newState.groupbyTimeFields[idx] = [].concat(m.fields);
             }
         }
-        newState.showGroupby = Boolean(newState.groupbyTimeFields[0].length) && Boolean(newState.groupbyTimeFields[1].length);
+
+        let selected = Boolean(newState.groupbyTypes[0]) && Boolean(newState.groupbyTypes[1]);
+        let allComposite = Boolean(newState.groupbyTypes[0] === "C") && Boolean(newState.groupbyTypes[1] === "C");
+        let allRaw = Boolean(newState.groupbyTypes[0] === "R") && Boolean(newState.groupbyTypes[1] === "R");
+        newState.showGroupby = selected && !allComposite;
+        newState.groupingFixed = newState.showGroupby && !allRaw;
+
+        if (newState.groupingFixed) {
+            let m1 = this.props.metrics.find(m => m.id === newState.metricsChosen[0]);
+            let m2 = this.props.metrics.find(m => m.id === newState.metricsChosen[1]);
+            let mtr = m1;
+            if (m2 && (m2.type === "C")) {
+                mtr = m2;
+            }
+            if (mtr) {
+                newState.grouping = Boolean(Object.keys(mtr.info.groupby).length);
+                if (newState.grouping) {
+                    newState.fixedDefaults.group_type = mtr.info.groupby.group_type;
+                    newState.fixedDefaults.group_func = mtr.info.groupby.group_func;
+                }
+            }
+        }
+
         this.setState(newState);
     }
 
@@ -403,12 +438,21 @@ class NewMetricModal extends Component {
                     </div>), "operation", "operationDescription"),
             ];
             if (this.state.showGroupby) {
+                let fixedGroupingType = {};
+                let fixedGroupingFunc = {};
+                if (this.state.groupingFixed) {
+                    fixedGroupingType['value'] = this.state.fixedDefaults.group_type;
+                    fixedGroupingFunc['value'] = this.state.fixedDefaults.group_func;
+                    fixedGroupingType['disabled'] = true;
+                    fixedGroupingFunc['disabled'] = true;
+                }
+
                 formInputs.push(
                     (<FormGroup row key="groupby" className="animated fadeIn">
                         <Label for="group_type" sm={3}>Group by</Label>
                         <Col sm={2}>
                             <Input type="select" name="group_type" id="groupbyType" onChange={this.changeGrouping}
-                                   defaultValue="">
+                                   {...fixedGroupingType}>
                                 <option value="">-- No grouping --</option>
                                 <option value="day">Day</option>
                                 <option value="3_days">3 days</option>
@@ -418,7 +462,8 @@ class NewMetricModal extends Component {
                         </Col>
                         {this.state.grouping ? [
                             (<Col sm={2} key="group_func" className="animated fadeIn">
-                                <Input type="select" name="group_func" id="groupbyFunc" required>
+                                <Input type="select" name="group_func" id="groupbyFunc" required
+                                       {...fixedGroupingFunc}>
                                     <option value="sum">Sum</option>
                                     <option value="count">Count</option>
                                     <option value="min">Min</option>

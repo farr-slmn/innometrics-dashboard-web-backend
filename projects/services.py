@@ -17,6 +17,8 @@ from projects.models import Metric, UserParticipation
 
 DAY_SEC = 24 * 60 * 60
 
+AGGR_FUNCTIONS = {'sum': sum, 'count': len, 'min': min, 'max': max}
+
 
 def retrieve_metrics(participation):
     result = []
@@ -94,7 +96,6 @@ def raw_metric_filters_qs(metric, participation):
 
     # list of properties names and type for filtered activities
     # should be retrieved before filtering by measurement name
-    # metric_data['fields'] = list(measurements.values('name', 'type').distinct().order_by('type', 'name'))
     metric_data_fields_qs = measurements_qs.values('name', 'type').distinct().order_by('type', 'name')
 
     return measurements_qs, metric_data_fields_qs
@@ -127,80 +128,119 @@ def apply_filters(measurements_qs, filters, field_name):
 
 
 # for Composite metric
+def get_grouped_measurements(metric, participation, time_field, interval, shifted=False):
+    """
+    Groups measurements from raw metric by period according to provided 'time_field' and interval value.
+
+    :param metric: Metric model instance
+    :param participation: UserParticipation model instance
+    :param time_field: field name of activity that represents time (epoch time or UTC)
+    :param interval: time interval for grouping in seconds
+    :param shifted: whether shift interval to the current time or not.
+    :return: dictionary of measurements lists grouped by period
+    """
+    if metric.type != Metric.RAW:
+        raise ValueError
+
+    if not time_field:
+        return {}
+
+    field_name = metric.info['field']
+    activity_name = metric.info.get('activity', None)
+    group = metric.info['filters'].get('group', None)
+    field_from = metric.info['filters'].get('field_from', None)
+    field_to = metric.info['filters'].get('field_to', None)
+
+    # retrieve time for target measurements
+    qs = Measurement.objects.filter(activity__participation=participation, name=time_field)
+    if activity_name:
+        qs = qs.filter(activity__entity__name=activity_name)
+    if group and int(group) >= 0:
+        qs = qs.filter(activity__entity__group_id=group)
+
+    activities = qs.values('activity_id', 'value', 'type')
+    act_time = {}
+    for a in activities:
+        act_time[a['activity_id']] = a['value'], a['type']
+
+    # retrieve target measurements
+    m_qs = Measurement.objects.filter(activity_id__in=act_time.keys(), name=field_name)
+    if field_from:
+        m_qs = m_qs.filter(value__gte=field_from)
+    if field_to:
+        m_qs = m_qs.filter(value__lte=field_to)
+
+    # set time to measurements
+    measurements = m_qs.values('value', 'type', 'activity_id').order_by('id')
+    for m in measurements:
+        time_v, time_type = act_time[m['activity_id']]
+
+        if time_type == "long":
+            m['time'] = int(time_v) / 1000  # without millis
+        elif time_type == "datetime":
+            m['time'] = dateutil.parser.parse(time_v.upper()).timestamp()
+
+    # group measurements by period
+    return group_by_period(measurements, interval, shifted)
+
+
+def get_interval_and_shift(group_by):
+    """
+    Returns time interval and shifting flag according to 'group_by' options.
+
+    :param group_by: 'group_by' options dictionary from metric info
+    :return: (interval, shifted) tuple of interval in seconds and shifting boolean flag
+    """
+
+    if group_by['group_type'] == '3_days':
+        return 3 * DAY_SEC, True
+    elif group_by['group_type'] == '7_days':
+        return 7 * DAY_SEC, True
+    elif group_by['group_type'] == '30_days':
+        return 30 * DAY_SEC, True
+
+    return DAY_SEC, False
+
+
+# for Composite metric
 def retrieve_composite_metric_data(metric, participation, result_list):
+    """
+    Retrieves composite metric data from provided composite metric
+
+    :param metric: Metric model instance
+    :param participation: UserParticipation model instance
+    :param result_list: list for storing already retrieved metric data for reuse
+    :return: (metric_value, x_values, y_values) - tuple with current metric value, list of x values and list of y values
+    """
+    if metric.type != Metric.COMPOSITE:
+        raise ValueError
+
     metric_value, x_values, y_values = 0, None, None
     component_ids = list(map(int, metric.info['components']))
     aggregate = metric.info['aggregate']
     group_by = metric.info.get('groupby', None)
 
-    if group_by:
+    metric_components = Metric.objects.filter(id__in=component_ids, participation=participation)
+    if len(metric_components) != 2 and component_ids[0] != component_ids[1]:
+        raise ValueError
+
+    if component_ids[0] != metric_components[0].id:
+        metric_components = [metric_components[1], metric_components[0]]
+
+    all_raw = all([m.type == Metric.RAW for m in metric_components])
+
+    if group_by and all_raw:
         # both metric components should be 'raw'
-        metric_components = Metric.objects.filter(id__in=component_ids, participation=participation)
-        if len(metric_components) != 2 and component_ids[0] != component_ids[1]:
-            raise ValueError
 
-        if component_ids[0] != metric_components[0].id:
-            metric_components = [metric_components[1], metric_components[0]]
-
+        interval, shifted = get_interval_and_shift(group_by)
+        time_field = group_by.get('group_timefield', None)
         measurement_grouped = []
         for mc in metric_components:
-            field_name = mc.info['field']
-            activity_name = mc.info.get('activity', None)
-            group = mc.info['filters'].get('group', None)
-            field_from = mc.info['filters'].get('field_from', None)
-            field_to = mc.info['filters'].get('field_to', None)
-            timefield = group_by.get('group_timefield', None)
-
-            # retrieve time for target measurements
-            qs = Measurement.objects.filter(activity__participation=participation, name=timefield)
-            if activity_name:
-                qs = qs.filter(activity__entity__name=activity_name)
-            if group and int(group) >= 0:
-                qs = qs.filter(activity__entity__group_id=group)
-
-            activities = qs.values('activity_id', 'value', 'type')
-            act_time = {}
-            for a in activities:
-                act_time[a['activity_id']] = a['value'], a['type']
-
-            # retrieve target measurements
-            m_qs = Measurement.objects.filter(activity_id__in=act_time.keys(), name=field_name)
-            if field_from:
-                m_qs = m_qs.filter(value__gte=field_from)
-            if field_to:
-                m_qs = m_qs.filter(value__lte=field_to)
-
-            # set time to measurements
-            measurements = m_qs.values('value', 'type', 'activity_id').order_by('id')
-            for m in measurements:
-                time_v, time_type = act_time[m['activity_id']]
-
-                if time_type == "long":
-                    m['time'] = int(time_v) / 1000  # without millis
-                elif time_type == "datetime":
-                    m['time'] = dateutil.parser.parse(time_v.upper()).timestamp()
-
-            # group measurements by period
-            interval, shift = DAY_SEC, False
-            if group_by['group_type'] == '3_days':
-                interval, shift = 3 * DAY_SEC, True
-            elif group_by['group_type'] == '7_days':
-                interval, shift = 7 * DAY_SEC, True
-            elif group_by['group_type'] == '30_days':
-                interval, shift = 30 * DAY_SEC, True
-
-            grouped = group_by_period(measurements, interval, shift)
+            grouped = get_grouped_measurements(mc, participation, time_field, interval, shifted)
             measurement_grouped.append(grouped)
 
         res = {}
-        if group_by['group_func'] == 'sum':
-            agg_func = sum
-        elif group_by['group_func'] == 'count':
-            agg_func = len
-        elif group_by['group_func'] == 'min':
-            agg_func = min
-        elif group_by['group_func'] == 'max':
-            agg_func = max
+        agg_func = AGGR_FUNCTIONS[group_by['group_func']]
         # merge and apply aggregation to grouped measurements
         m_groups_1, m_groups_2 = measurement_grouped[0], measurement_grouped[-1]
         for k, group_1 in m_groups_1.items():
@@ -224,10 +264,12 @@ def retrieve_composite_metric_data(metric, participation, result_list):
 
         x_values, y_values = zip(*res)
 
-        # TODO move to frontend
+        # TODO move date formatting to frontend
         x_values = list(map(lambda v: str(date.fromtimestamp(v)), x_values))
-        if y_values and y_values[-1] is not None:
+        if y_values:
             metric_value = y_values[-1]
+
+        return metric_value, x_values, y_values
 
     else:
         # TODO more than two components
@@ -240,68 +282,111 @@ def retrieve_composite_metric_data(metric, participation, result_list):
         def retrieve(mtc):
             if type(mtc) is int:
                 mtc = next((m for m in result_list if m['id'] == mtc), mtc)
-            # retrieve metric if mtc is id
-            return retrieve_metric_data(mtc, participation, result_list) if type(mtc) is int else mtc
+            if type(mtc) is int:
+                # retrieve metric data if mtc is id
+                mtc = next((m for m in metric_components if m.id == mtc), mtc)
+                mtc = retrieve_metric_data(mtc, participation, result_list)
+            return mtc
 
-        components = list(map(retrieve, components))
+        if all_raw:
+            components_data = list(map(retrieve, components))
+            values = [list(map(lambda x: x['value'], comp['measurements'])) for comp in components_data]
 
-        if (components[0]['type'] == 'R') and (components[1]['type'] == 'R'):
+            n = max(map(len, values))
+            x_values = list(range(n))
 
-            # measurements grouping by activity
-            activity_measurements = defaultdict(list)
-            for comp in components:
-                for idx, measurement in enumerate(comp['measurements']):
-                    if group_by:
-                        activity_measurements[measurement['activity_id']].append(measurement)
-                    else:
-                        activity_measurements[idx].append(measurement)
+            cur_len = len(values[0])
+            y_values = values[0]
+            y_values = ([None] * (n - cur_len)) + y_values
 
-            activity_values = []
-            for key, measurements in activity_measurements.items():
-                activity_value = {
-                    'source': measurements
-                }
-                a = measurements[0]['value']
-                b = measurements[1]['value']
-                activity_value['value'] = main_aggregate_operation(a, b, aggregate)
-                activity_values.append(activity_value)
+            for vs in values[1:]:
+                cur_len = len(vs)
+                y_vals = ([None] * (n - cur_len)) + vs
 
-            activity_values.sort(key=lambda x: x['source'][0]['id'])
-            y_values = list(map(lambda x: x['value'], activity_values))
-            x_values = list(range(0, len(y_values)))
+                for i, y in enumerate(y_vals):
+                    y_values[i] = main_aggregate_operation(y_values[i], y, aggregate)
 
             if y_values:
                 metric_value = y_values[-1]
 
-        elif (components[0]['type'] == 'C') and (components[1]['type'] == 'C'):
-            y_val_0 = components[0]['y_values']
-            y_val_1 = components[1]['y_values']
+            return metric_value, x_values, y_values
 
-            # TODO merge by x values
-            x_val_0 = components[0]['x_values']
+        elif all([m.type == Metric.COMPOSITE for m in metric_components]):
+            components_data = list(map(retrieve, components))
 
-            y_val = []
-
-            # TODO aggregation with different values lengths
-            if len(y_val_0) == len(y_val_1):
-                for i, val in enumerate(y_val_0):
-                    if y_val_0[i] is None or y_val_1[i] is None:
-                        continue
-                    y_val.append(main_aggregate_operation(y_val_0[i], y_val_1[i], aggregate))
-
-            x_values = x_val_0
-            y_values = y_val
-            if y_val:
-                metric_value = y_val[-1]
+            x_val_0 = components_data[0]['x_values']
+            y_val_0 = components_data[0]['y_values']
+            x_val_1 = components_data[1]['x_values']
+            y_val_1 = components_data[1]['y_values']
 
         else:
-            x_values = []
-            y_values = []
+            if metric_components[0].type == Metric.RAW:
+                raw_idx, cmp_idx = 0, 1
+            else:
+                raw_idx, cmp_idx = 1, 0
+            group_by = metric_components[cmp_idx].info.get('groupby', None)
+
+            composite_data = retrieve(metric_components[cmp_idx].id)
+            x_val_0 = composite_data['x_values']
+            y_val_0 = composite_data['y_values']
+
+            if group_by:
+                interval, shifted = get_interval_and_shift(group_by)
+                time_field = group_by.get('group_timefield', None)
+                agg_func = AGGR_FUNCTIONS[group_by['group_func']]
+
+                measurement_grouped = get_grouped_measurements(metric_components[raw_idx], participation,
+                                                               time_field, interval, shifted)
+
+                x_val_1 = list(measurement_grouped.keys())
+                values = list(measurement_grouped.values())
+                if group_by['group_func'] != 'count':
+                    for i in range(len(values)):
+                        values[i] = list(map(float, values[i]))
+
+                y_val_1 = [agg_func(y) for y in values]
+
+            else:
+                raw_data = retrieve(metric_components[raw_idx].id)
+                y_val_1 = list(map(lambda x: x['value'], raw_data['measurements']))
+                n = max([len(y_val_0), len(y_val_1)])
+
+                x_val_0 = list(range(n))
+                x_val_1 = x_val_0
+
+                y_val_0 = ([None] * (n - len(y_val_0))) + y_val_0
+                y_val_1 = ([None] * (n - len(y_val_1))) + y_val_1
+
+            if metric_components[0].type == Metric.RAW:
+                x_val_0, y_val_0, x_val_1, y_val_1 = x_val_1, y_val_1, x_val_0, y_val_0
+
+        # TODO merge by x values
+        y_val = []
+
+        # TODO aggregation with different values lengths
+        if len(y_val_0) == len(y_val_1):
+            y_val = [main_aggregate_operation(y_0, y_1, aggregate) for y_0, y_1 in zip(y_val_0, y_val_1)]
+
+        x_values = x_val_0
+        y_values = y_val
+        if y_val:
+            metric_value = y_val[-1]
 
     return metric_value, x_values, y_values
 
 
 def main_aggregate_operation(a, b, aggregate):
+    """
+    Evaluates input values according to aggregation function.
+
+    :param a: first value
+    :param b: second value
+    :param aggregate: aggregation type
+    :return: single float value or None if some of the values is None
+    """
+    if (a is None) or (b is None):
+        return None
+
     if aggregate == 'minus':
         return float(a) - float(b)
     elif aggregate == 'timeinter':
@@ -323,17 +408,26 @@ def main_aggregate_operation(a, b, aggregate):
         return max(float(a), float(b))
 
 
-def group_by_period(measurements, interval=DAY_SEC, shift=False):
+def group_by_period(measurements, interval=DAY_SEC, shifted=False):
+    """
+    Groups measurements by period according to provided time interval.
+
+    :param measurements: list of measurements with attributes 'time' and 'value'
+    :param interval: time interval for grouping in seconds
+    :param shifted: whether shift interval to the current time or not.
+    :return: dictionary of values lists grouped by period
+    """
+
     by_period = defaultdict(list)
-    if measurements and shift:
+    if measurements and shifted:
         last_val = max(map(lambda m: m['time'], measurements))
-        shift = last_val - int(last_val / interval) * interval + 1
+        shifted = last_val - int(last_val / interval) * interval + 1
     for m in measurements:
         timestamp_seconds = m['time']
-        period_start = (timestamp_seconds - shift) / interval
-        if shift:
+        period_start = (timestamp_seconds - shifted) / interval
+        if shifted:
             period_start = period_start + 1
-        day = int(period_start) * interval + shift
+        day = int(period_start) * interval + shifted
         if day:
             by_period[day].append(m['value'])
     return by_period
