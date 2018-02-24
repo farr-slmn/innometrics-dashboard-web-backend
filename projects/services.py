@@ -245,9 +245,7 @@ def retrieve_composite_metric_data(metric, participation, result_list):
         m_groups_1, m_groups_2 = measurement_grouped[0], measurement_grouped[-1]
         for k, group_1 in m_groups_1.items():
             if k in m_groups_2 and len(group_1) == len(m_groups_2[k]):
-                group_values = []
-                for a, b in zip(group_1, m_groups_2[k]):
-                    group_values.append(main_aggregate_operation(a, b, aggregate))
+                group_values = map(lambda a, b: main_aggregate_operation(a, b, aggregate), group_1, m_groups_2[k])
                 res[k] = agg_func(group_values)
 
         # fill by None other days
@@ -264,8 +262,6 @@ def retrieve_composite_metric_data(metric, participation, result_list):
 
         x_values, y_values = zip(*res)
 
-        # TODO move date formatting to frontend
-        x_values = list(map(lambda v: str(date.fromtimestamp(v)), x_values))
         if y_values:
             metric_value = y_values[-1]
 
@@ -360,17 +356,22 @@ def retrieve_composite_metric_data(metric, participation, result_list):
             if metric_components[0].type == Metric.RAW:
                 x_val_0, y_val_0, x_val_1, y_val_1 = x_val_1, y_val_1, x_val_0, y_val_0
 
-        # TODO merge by x values
-        y_val = []
+        vals_0 = dict(zip(x_val_0, y_val_0))
+        vals_1 = dict(zip(x_val_1, y_val_1))
+        values_dict = {}
 
-        # TODO aggregation with different values lengths
-        if len(y_val_0) == len(y_val_1):
-            y_val = [main_aggregate_operation(y_0, y_1, aggregate) for y_0, y_1 in zip(y_val_0, y_val_1)]
+        # merge (apply aggregation) by x values
+        for key, val in vals_0.items():
+            if key in vals_1:
+                values_dict[key] = main_aggregate_operation(val, vals_1[key], aggregate)
 
-        x_values = x_val_0
-        y_values = y_val
-        if y_val:
-            metric_value = y_val[-1]
+        # sort by x values
+        res = list(values_dict.items())
+        res.sort(key=lambda v: v[0])
+
+        x_values, y_values = zip(*res)
+        if y_values:
+            metric_value = y_values[-1]
 
     return metric_value, x_values, y_values
 

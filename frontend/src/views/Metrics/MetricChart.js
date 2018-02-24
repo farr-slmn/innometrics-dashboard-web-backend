@@ -10,14 +10,14 @@ class MetricChart extends Component {
         this.name = props.name;
         this.data = {
             yValues: props.yValues,
-            xValues: props.xValues
+            xValues: props.xValues.map(x => x > 536870912 ? MetricChart.getFormattedDate(x) : x),
         };
         this.state = {
             chartData: {
-                labels: props.xValues,
+                labels: this.data.xValues,
                 datasets: [
                     {
-                        label: props.name,
+                        label: this.name,
                         fill: true,
                         lineTension: 0.1,
                         backgroundColor: 'rgba(75,192,192,0.4)',
@@ -35,7 +35,7 @@ class MetricChart extends Component {
                         pointHoverBorderWidth: 2,
                         pointRadius: 1,
                         pointHitRadius: 10,
-                        data: props.yValues,
+                        data: this.data.yValues,
                     }
                 ]
             },
@@ -64,6 +64,11 @@ class MetricChart extends Component {
             </div>
 
         );
+    }
+
+    static getFormattedDate(seconds) {
+        let t = new Date(seconds * 1000);
+        return t.toLocaleDateString();
     }
 }
 
