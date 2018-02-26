@@ -70,6 +70,7 @@ class MetricTile extends Component {
     };
 
     render() {
+        //get and truncate metric value
         let metricValue = this.getMetricValue();
         if (metricValue === "-" && this.props.metric.value !== null) {
             metricValue = (<span className="fa fa-circle-o-notch fa-spin"/>);
@@ -78,14 +79,28 @@ class MetricTile extends Component {
         }
         let trendClass = this.trend === "good" ? "bg-success" : this.trend === "bad" ? "bg-danger" : "bg-info";
 
+        // set direction of new metric value - arrow up or down
+        let trendDirection = null;
+        if (Number.isFinite(this.props.metric.value) &&
+                Number.isFinite(this.props.metric.old_value) &&
+                this.props.metric.value !== this.props.metric.old_value) {
+
+            trendDirection = this.props.metric.value > this.props.metric.old_value;
+        }
+        if (trendDirection !== null) {
+            let arrowClass = trendDirection ? " fa-arrow-circle-o-up" : " fa-arrow-circle-o-down";
+            trendDirection = (<i className={"metric-tile-trend fa " + arrowClass}/>)
+        }
+
         return (
             <Link to={this.routes.metric + this.id}
                   style={{color: 'white', textDecoration: 'none'}}>
                 <Card className={"metric-tile card-block text-white " + trendClass}
                       onMouseOut={() => this.mouseOut()}
                       onMouseOver={() => this.mouseOver()}>
-                    <div className={"h5 text-right mb-2 " + trendClass}>
-                        {/*<i className="icon-arrow-down"/>*/}
+                    <div className="h5 text-right mb-2">
+                        <span style={{whiteSpace: "pre"}}> </span>
+                        {trendDirection}
                     </div>
                     <div className="h4 mb-0">{metricValue}</div>
                     <h6 className="text-muted text-uppercase font-weight-bold">{this.truncate(this.name, 10)}</h6>

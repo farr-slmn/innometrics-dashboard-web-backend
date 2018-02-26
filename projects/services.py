@@ -473,10 +473,13 @@ def retrieve_current_metric_data(metric, participation, strategy="NO_RAW", group
         metric_data = model_to_dict(metric)
 
     if metric.type == Metric.COMPOSITE:
-        metric_data['value'] = retrieve_current_composite_metric_value(metric, participation)
+        metric_data['value'], metric_data['old_value'] = retrieve_current_composite_metric_value(metric, participation)
     elif strategy != "NO_RAW":
         # 'LAST' or 'GROUPING'
-        metric_data['value'], fields_qs = retrieve_current_raw_metric_value(metric, participation, strategy, group_by)
+        metric_data['value'], metric_data['old_value'], fields_qs = retrieve_current_raw_metric_value(metric,
+                                                                                                      participation,
+                                                                                                      strategy,
+                                                                                                      group_by)
     else:
         # for retrieving only available activities fields
         _, fields_qs = raw_metric_filters_qs(metric, participation)
@@ -505,14 +508,15 @@ def retrieve_current_raw_metric_value(metric, participation, strategy="LAST", gr
     measurements_qs, fields_qs = raw_metric_filters_qs(metric, participation)
     measurements_qs = measurements_qs.filter(name=metric.info['field'])
 
-    value = None
+    values = [None, None]
     if strategy == "LAST":
-        last = measurements_qs.order_by('-id').first()
-        value = None if last is None else int(last.value)
+        last = measurements_qs.order_by('-id')[:2]
+        values[0] = None if last[0] is None else int(last[0].value)
+        values[1] = None if last[1] is None else int(last[1].value)
     elif strategy == "GROUPING":
-        value = retrieve_grouped_current_raw_metric_value(measurements_qs, group_by)
+        values[0], values[1] = retrieve_grouped_current_raw_metric_value(measurements_qs, group_by)
 
-    return value, fields_qs
+    return values[0], values[1], fields_qs
 
 
 def retrieve_grouped_current_raw_metric_value(measurements_qs, group_by):
@@ -538,10 +542,12 @@ def retrieve_grouped_current_raw_metric_value(measurements_qs, group_by):
         day_shift = 29
 
     period_start_sec = int(time.time() / DAY_SEC - day_shift) * DAY_SEC
+    period_old_start_sec = int(time.time() / DAY_SEC - day_shift * 2 - 1) * DAY_SEC
 
     time_measurements = Measurement.objects.filter(activity__in=activity_ids, name=group_by['group_timefield'])
 
     allowed_activities = set()
+    allowed_activities_old = set()
     for t in time_measurements:
         if t.type == "long":
             timestamp = int(t.value) / 1000  # without millis
@@ -552,24 +558,21 @@ def retrieve_grouped_current_raw_metric_value(measurements_qs, group_by):
 
         if timestamp >= period_start_sec:
             allowed_activities.add(t.activity_id)
+        elif timestamp >= period_old_start_sec:
+            allowed_activities_old.add(t.activity_id)
 
-    measurements_qs = measurements_qs.filter(activity__in=allowed_activities)
-    measurements = measurements_qs.values('type', 'value')
+    measurements_cur_qs = measurements_qs.filter(activity__in=allowed_activities)
+    measurements_old_qs = measurements_qs.filter(activity__in=allowed_activities_old)
+    measurements = measurements_cur_qs.values('type', 'value')
+    measurements_old = measurements_old_qs.values('type', 'value')
 
+    vals = [None, None]
     fn = group_by['group_func']
     if fn == 'count':
-        return measurements.count()
+        return measurements.count(), measurements_old.count()
 
     elif (fn == 'sum') or (fn == 'max') or (fn == 'min'):
-        # converting to numbers
-        values = []
-        for m in measurements:
-            if (m['type'] == "long") or (m['type'] == "int"):
-                values.append(int(m['value']))
-            elif m['type'] == "datetime":
-                values.append(dateutil.parser.parse(m['value'].upper()).timestamp() * 1000)  # with millis
-
-        # aggregating
+        # aggregating function
         if fn == 'sum':
             aggr = sum
         elif fn == 'max':
@@ -577,9 +580,18 @@ def retrieve_grouped_current_raw_metric_value(measurements_qs, group_by):
         elif fn == 'min':
             aggr = min
 
-        return aggr(values) if values else None
+        # converting to numbers
+        for i, ms in enumerate([measurements, measurements_old]):
+            values = []
+            for m in ms:
+                if (m['type'] == "long") or (m['type'] == "int"):
+                    values.append(int(m['value']))
+                elif m['type'] == "datetime":
+                    values.append(dateutil.parser.parse(m['value'].upper()).timestamp() * 1000)  # with millis
 
-    return None
+            vals[i] = aggr(values) if values else None
+
+    return vals[0], vals[1]
 
 
 def retrieve_current_composite_metric_value(metric, participation):
@@ -609,30 +621,35 @@ def retrieve_current_composite_metric_value(metric, participation):
             retrieve_current_metric_data(component_ids[1], participation, strategy="LAST"),
         ]
 
-    values = [c['value'] for c in components]
-    if None in values:
-        return None
+    cur_values = [c['value'] for c in components]
+    old_values = [c['old_value'] for c in components]
+    vals = [None, None]
+    for i, values in enumerate([cur_values, old_values]):
+        if None in values:
+            continue
 
-    val = None
-    if aggregate == "minus":
-        val = values[0] - values[1]
-    elif aggregate == 'timeinter':
-        # already converted to seconds in the retrieve_current_metric_data()
-        val = abs(values[0] - values[1])
-    elif aggregate == "sum":
-        val = sum(values)
-    elif aggregate == "mult":
-        val = reduce(lambda x, y: x * y, values)
-    elif aggregate == "div":
-        val = values[0] / values[1]
-    elif aggregate == 'avg':
-        val = sum(values) / len(values)
-    elif aggregate == 'min':
-        val = min(values)
-    elif aggregate == 'max':
-        val = max(values)
+        val = None
+        if aggregate == "minus":
+            val = values[0] - values[1]
+        elif aggregate == 'timeinter':
+            # already converted to seconds in the retrieve_current_metric_data()
+            val = abs(values[0] - values[1])
+        elif aggregate == "sum":
+            val = sum(values)
+        elif aggregate == "mult":
+            val = reduce(lambda x, y: x * y, values)
+        elif aggregate == "div":
+            val = values[0] / values[1]
+        elif aggregate == 'avg':
+            val = sum(values) / len(values)
+        elif aggregate == 'min':
+            val = min(values)
+        elif aggregate == 'max':
+            val = max(values)
 
-    return val
+        vals[i] = val
+
+    return vals[0], vals[1]
 
 
 ######################################################################
