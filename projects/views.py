@@ -75,7 +75,7 @@ class UserProjectMetrics(APIView):
         serializer = MetricSerializer(data=request.data)
         if serializer.is_valid():
             new_metric = serializer.save()
-            metric = retrieve_current_metric_data(new_metric, participation, [])
+            metric = retrieve_current_metric_data(new_metric, participation, strategy="NO_RAW")
             return JsonResponse(metric, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

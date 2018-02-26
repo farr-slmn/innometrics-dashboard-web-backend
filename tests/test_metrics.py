@@ -100,7 +100,9 @@ class MetricTestCase(TransactionTestCase):
             },
             "id": 1, "participation": 1,
             "name": "metric_1",
-            "fields": ["extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "type": "R"
         }
 
@@ -342,7 +344,10 @@ class RawMetricTestCase(TransactionTestCase):
             }
         }
         metric_response = {
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "info": {
                 "field": "does not exist",
                 "filters": {}
@@ -357,7 +362,10 @@ class RawMetricTestCase(TransactionTestCase):
         self.assertJSONEqual(str(response.content, encoding='utf8'), metric_response)
 
         metric_data_response = {
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "measurements": [],
             "info": {
                 "field": "does not exist",
@@ -449,7 +457,10 @@ class RawMetricTestCase(TransactionTestCase):
             }
         }
         new_metric_response = {
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "info": {
                 "field": "m_begin",
                 "filters": {"field_from": "234"}
@@ -464,7 +475,10 @@ class RawMetricTestCase(TransactionTestCase):
         self.assertJSONEqual(str(response.content, encoding='utf8'), new_metric_response)
 
         metric_data_response = {
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "measurements": [
                 {"id": 4, "name": "m_begin", "value": "234", "type": "long", "activity_id": 2,
                  "entity": "activity_2", "group": None},
@@ -494,7 +508,10 @@ class RawMetricTestCase(TransactionTestCase):
             }
         }
         new_metric_response = {
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "info": {
                 "field": "m_begin",
                 "filters": {"field_to": "234"}
@@ -509,7 +526,10 @@ class RawMetricTestCase(TransactionTestCase):
         self.assertJSONEqual(str(response.content, encoding='utf8'), new_metric_response)
 
         metric_data_response = {
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "measurements": [
                 {"id": 1, "name": "m_begin", "value": "123", "type": "long", "activity_id": 1,
                  "entity": "activity_1", "group": None},
@@ -550,7 +570,10 @@ class RawMetricTestCase(TransactionTestCase):
                     },
                     "id": 1, "participation": 1,
                     "name": "metric_1",
-                    "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+                    "fields": [{'name': 'm_begin', 'type': 'long'},
+                               {'name': 'm_end', 'type': 'long'},
+                               {'name': 'another_extra_field', 'type': 'string'},
+                               {'name': 'extra_field', 'type': 'string'}],
                     "type": "R"
                 }
             ]
@@ -590,7 +613,10 @@ class RawMetricTestCase(TransactionTestCase):
             },
             "id": 1, "participation": 1,
             "name": "metric_1",
-            "fields": ["another_extra_field", "extra_field", "m_begin", "m_end"],
+            "fields": [{'name': 'm_begin', 'type': 'long'},
+                       {'name': 'm_end', 'type': 'long'},
+                       {'name': 'another_extra_field', 'type': 'string'},
+                       {'name': 'extra_field', 'type': 'string'}],
             "type": "R"
         }
 

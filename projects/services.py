@@ -1,7 +1,6 @@
 import random as rnd
 import time
 from collections import defaultdict
-from datetime import date
 from functools import reduce
 from itertools import groupby
 
@@ -92,7 +91,7 @@ def raw_metric_filters_qs(metric, participation):
     if activity_name:
         measurements_qs = measurements_qs.filter(activity__entity__name=activity_name)
 
-        measurements_qs = apply_filters(measurements_qs, metric.info['filters'], metric.info['field'])
+    measurements_qs = apply_filters(measurements_qs, metric.info['filters'], metric.info['field'])
 
     # list of properties names and type for filtered activities
     # should be retrieved before filtering by measurement name
@@ -115,6 +114,7 @@ def apply_filters(measurements_qs, filters, field_name):
     if group and int(group) >= 0:
         measurements_qs = measurements_qs.filter(activity__entity__group_id=group)
 
+    # TODO compare values according to measurement types
     field_from = filters.get('field_from', None)
     if field_from:
         # TODO could be reasonable to filter whole activity by property value
