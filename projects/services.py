@@ -3,6 +3,7 @@ import time
 from collections import defaultdict
 from functools import reduce
 from itertools import groupby
+from operator import mul, truediv, sub
 
 import dateutil
 import dateutil.parser
@@ -16,7 +17,13 @@ from projects.models import Metric, UserParticipation
 
 DAY_SEC = 24 * 60 * 60
 
-AGGR_FUNCTIONS = {'sum': sum, 'count': len, 'min': min, 'max': max}
+DAY_SHIFTING = {'day': 0, '3_days': 2, '7_days': 6, '30_days': 29}
+
+AGGR_FUNCTIONS = {'sum': sum, 'count': len, 'min': min, 'max': max,
+                  'avg': lambda x: sum(x) / len(x),
+                  'mult': lambda x: reduce(mul, x),
+                  'div': lambda x: reduce(truediv, x),
+                  'minus': lambda x: reduce(sub, x)}
 
 
 def retrieve_metrics(participation):
@@ -192,14 +199,9 @@ def get_interval_and_shift(group_by):
     :return: (interval, shifted) tuple of interval in seconds and shifting boolean flag
     """
 
-    if group_by['group_type'] == '3_days':
-        return 3 * DAY_SEC, True
-    elif group_by['group_type'] == '7_days':
-        return 7 * DAY_SEC, True
-    elif group_by['group_type'] == '30_days':
-        return 30 * DAY_SEC, True
+    intervals = {'3_days': (3 * DAY_SEC, True), '7_days': (7 * DAY_SEC, True), '30_days': (30 * DAY_SEC, True)}
 
-    return DAY_SEC, False
+    return intervals.get(group_by['group_type'], (DAY_SEC, False))
 
 
 # for Composite metric
@@ -388,25 +390,14 @@ def main_aggregate_operation(a, b, aggregate):
     if (a is None) or (b is None):
         return None
 
-    if aggregate == 'minus':
-        return float(a) - float(b)
+    if aggregate in AGGR_FUNCTIONS:
+        values = [float(a), float(b)]
+        return AGGR_FUNCTIONS[aggregate](values)
     elif aggregate == 'timeinter':
         # represent time as timestamp in seconds
         c = int(dateutil.parser.parse(a.upper()).timestamp())
         d = int(dateutil.parser.parse(b.upper()).timestamp())
         return abs(c - d)
-    elif aggregate == 'sum':
-        return float(a) + float(b)
-    elif aggregate == 'mult':
-        return float(a) * float(b)
-    elif aggregate == 'div':
-        return float(a) / float(b)
-    elif aggregate == 'avg':
-        return (float(a) + float(b)) / 2
-    elif aggregate == 'min':
-        return min(float(a), float(b))
-    elif aggregate == 'max':
-        return max(float(a), float(b))
 
 
 def group_by_period(measurements, interval=DAY_SEC, shifted=False):
@@ -532,15 +523,7 @@ def retrieve_grouped_current_raw_metric_value(measurements_qs, group_by):
 
     activity_ids = measurements_qs.values_list('activity_id', flat=True)
 
-    if group_by['group_type'] == 'day':
-        day_shift = 0
-    elif group_by['group_type'] == '3_days':
-        day_shift = 2
-    elif group_by['group_type'] == '7_days':
-        day_shift = 6
-    elif group_by['group_type'] == '30_days':
-        day_shift = 29
-
+    day_shift = DAY_SHIFTING[group_by['group_type']]
     period_start_sec = int(time.time() / DAY_SEC - day_shift) * DAY_SEC
     period_old_start_sec = int(time.time() / DAY_SEC - day_shift * 2 - 1) * DAY_SEC
 
@@ -571,14 +554,9 @@ def retrieve_grouped_current_raw_metric_value(measurements_qs, group_by):
     if fn == 'count':
         return measurements.count(), measurements_old.count()
 
-    elif (fn == 'sum') or (fn == 'max') or (fn == 'min'):
+    elif fn in AGGR_FUNCTIONS:
         # aggregating function
-        if fn == 'sum':
-            aggr = sum
-        elif fn == 'max':
-            aggr = max
-        elif fn == 'min':
-            aggr = min
+        aggr = AGGR_FUNCTIONS[fn]
 
         # converting to numbers
         for i, ms in enumerate([measurements, measurements_old]):
@@ -629,23 +607,11 @@ def retrieve_current_composite_metric_value(metric, participation):
             continue
 
         val = None
-        if aggregate == "minus":
-            val = values[0] - values[1]
+        if aggregate in AGGR_FUNCTIONS:
+            val = AGGR_FUNCTIONS[aggregate](values)
         elif aggregate == 'timeinter':
             # already converted to seconds in the retrieve_current_metric_data()
-            val = abs(values[0] - values[1])
-        elif aggregate == "sum":
-            val = sum(values)
-        elif aggregate == "mult":
-            val = reduce(lambda x, y: x * y, values)
-        elif aggregate == "div":
-            val = values[0] / values[1]
-        elif aggregate == 'avg':
-            val = sum(values) / len(values)
-        elif aggregate == 'min':
-            val = min(values)
-        elif aggregate == 'max':
-            val = max(values)
+            val = abs(AGGR_FUNCTIONS['minus'](values))
 
         vals[i] = val
 
