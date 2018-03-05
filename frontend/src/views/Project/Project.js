@@ -1,12 +1,11 @@
 import React, {Component} from 'react';
 import Members from '../Members/Members'
 import {NavLink, Redirect, Route, Switch} from "react-router-dom";
-import MetricTile from "../Metrics/MetricTile";
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Container} from 'reactstrap';
 import NewMetricModal from "./NewMetricModal";
 import MetricsContainer from "../../containers/MetricContainer/MetricsContainer";
-import {SyncLoader} from "react-spinners";
 import ActivitiesTab from "./ActivitiesTab";
+import GeneralTab from "./GeneralTab";
 
 class Project extends Component {
     constructor(props) {
@@ -188,38 +187,7 @@ class Project extends Component {
                 </Switch>
                 <Switch>
                     <Route path={this.routes.tabGeneral} name="General">
-                        <div className="container tab-margin">
-                            {/*<div className="row card-group animated fadeIn">*/}
-                                {/*<div className="card">*/}
-                                    {/*<div className="card-block">*/}
-                                        {/*<div className="h1 text-muted text-right mb-2">*/}
-                                            {/*<i className="icon-people"/>*/}
-                                        {/*</div>*/}
-                                        {/*<div className="h4 mb-0">87.500</div>*/}
-                                        {/*<small className="text-muted text-uppercase font-weight-bold">Metric 1</small>*/}
-                                        {/*<div className="progress progress-xs mt-1 mb-0">*/}
-                                            {/*<div className="progress-bar bg-info" role="progressbar"*/}
-                                                 {/*style={pr_bar_style} aria-valuenow="25" aria-valuemin="0"*/}
-                                                 {/*aria-valuemax="100"/>*/}
-                                        {/*</div>*/}
-                                    {/*</div>*/}
-                                {/*</div>*/}
-                            {/*</div>*/}
-
-                            <div className="text-center">
-                                <SyncLoader loading={this.state.loading} color="#36D7B7" size={20} margin="10px"/>
-                            </div>
-
-                            <Row>
-                                {this.state.metrics.filter(metric => metric.type === 'C')
-                                    .map(metric => (
-                                        <Col xs={12} sm={3} md={2} className="animated fadeIn" key={metric.id}>
-                                            <MetricTile projectId={this.proj.id} metric={metric}/>
-                                        </Col>
-                                    ))
-                                }
-                            </Row>
-                        </div>
+                        <GeneralTab metrics={this.state.metrics} loading={this.state.loading} proj={this.proj}/>
                     </Route>
                 </Switch>
 

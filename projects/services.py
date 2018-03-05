@@ -684,9 +684,12 @@ def add_test_examples(user_id):
             p2.save()
 
             c1 = Metric(name='Tst props diff', type=Metric.COMPOSITE, participation=part,
-                        info={"bounds": {}, "groupby": {}, "aggregate": "minus", "components": [p1.id, p2.id]})
+                        info={"bounds": {}, "groupby": {}, "aggregate": "minus", "components": [p1.id, p2.id],
+                              "gqm": {"gqm_goal": "Show activity difference",
+                                      "gqm_question": "What is difference per activity?"}})
             c2 = Metric(name='Tst diff by day', type=Metric.COMPOSITE, participation=part,
                         info={"bounds": {"lower": 20, "upper": 80},
+                              "gqm": {"gqm_goal": "Show activity difference", "gqm_question": "How much per day?"},
                               "groupby": {"group_func": "sum", "group_type": "day", "group_timefield": "start time"},
                               "aggregate": "minus", "components": [p1.id, p2.id]})
             c3 = Metric(name='Tst diff by 3 days', type=Metric.COMPOSITE, participation=part,
@@ -699,5 +702,12 @@ def add_test_examples(user_id):
 
             c4 = Metric(name='Tst diff mult', type=Metric.COMPOSITE, participation=part,
                         info={"bounds": {"lower": 0, "upper": 1000000}, "groupby": {}, "aggregate": "mult",
+                              "components": [c2.id, c2.id],
+                              "gqm": {"gqm_goal": "Show activity difference",
+                                      "gqm_question": "What is difference per activity?"}})
+            c5 = Metric(name='Tst one', type=Metric.COMPOSITE, participation=part,
+                        info={"bounds": {"lower": 0, "upper": 2}, "groupby": {}, "aggregate": "div",
+                              "gqm": {"gqm_goal": "Show positive values", "gqm_question": "Is it equal to one?"},
                               "components": [c2.id, c2.id]})
             c4.save()
+            c5.save()

@@ -22,6 +22,9 @@ class NewMetricModal extends Component {
         this.state = {
             name: "default",
             type: "R",
+            gqmGoal: "",
+            gqmQuestion: "",
+            gqmQuestions: null,
             filters: [],
             properties: [],
             showGroupby: false,
@@ -40,6 +43,8 @@ class NewMetricModal extends Component {
         this.cancel = this.cancel.bind(this);
         this.changeActivity = this.changeActivity.bind(this);
         this.changeGrouping = this.changeGrouping.bind(this);
+        this.changeGoal = this.changeGoal.bind(this);
+        this.changeQuestion = this.changeQuestion.bind(this);
         this.findType = this.findType.bind(this);
 
         let project = Number.isInteger(props.projId) ? '?project=' + props.projId : '';
@@ -49,6 +54,30 @@ class NewMetricModal extends Component {
         this.routes = {
             login: "/login",
         };
+    }
+
+    getGoals() {
+        let goals = this.props.metrics.filter(m => (m.info.gqm)).map(m => m.info.gqm.gqm_goal);
+        goals = Array.from(new Set(goals).values());
+        goals.sort();
+        return goals;
+    }
+
+    changeGoal(goal) {
+        let goalText = goal.target.value;
+        let questions = null;
+        if (goalText) {
+            let ms = this.props.metrics.filter(m => (m.info.gqm) && (m.info.gqm.gqm_goal === goalText));
+            questions = Array.from(new Set(ms.map(m => m.info.gqm.gqm_question)).values());
+            questions.sort();
+        }
+        let question = (questions && questions.length) ? questions[0] : "";
+        this.setState({gqmGoal: goalText, gqmQuestions: questions, gqmQuestion: question});
+    }
+
+    changeQuestion(question) {
+        let questionText = question.target.value;
+        this.setState({gqmQuestion: questionText});
     }
 
     addFilter() {
@@ -192,6 +221,7 @@ class NewMetricModal extends Component {
                 components: [], // list of metrics ids
                 aggregate: undefined, // operation for aggregation: 'minus', 'timeinter'
                 groupby: {}, // dict of groping properties: 'group_type', 'group_func', 'group_timefield' (can be empty)
+                gqm: {},
                 bounds: {
                     lower: undefined,
                     upper: undefined,
@@ -211,6 +241,8 @@ class NewMetricModal extends Component {
                     submitObj.info[e.target[i].name] = e.target[i].value;
                 } else if (e.target[i].name.startsWith("group_")) {
                     submitObj.info.groupby[e.target[i].name] = e.target[i].value;
+                } else if (e.target[i].name.startsWith("gqm_")) {
+                    submitObj.info.gqm[e.target[i].name] = e.target[i].value;
                 } else {
                     submitObj[e.target[i].name] = e.target[i].value;
                 }
@@ -307,7 +339,10 @@ class NewMetricModal extends Component {
 
         let formInputs;
         if (this.state.type === "R") {
+            // for Raw metrics
             formInputs = [
+                (<h4 key="settings">Settings</h4>),
+
                 (<FormGroup row key="activity" className="animated fadeIn">
                     <Label for="activity" sm={3}>Activity</Label>
                     <Col sm={8}>
@@ -369,7 +404,80 @@ class NewMetricModal extends Component {
                 </Button>),
             ];
         } else {
+            // for Composite metrics
             formInputs = [
+                (<h4 key="gqm_title">GQM Category</h4>),
+
+                (<FormGroup row key="gqm_goal" className="animated fadeIn">
+                    <Label for="gqm_goal" sm={3}>Goal</Label>
+                    <Col sm={8}>
+                        <Input type="select" name="gqm_goal" id="gqm_goal" onChange={this.changeGoal}>
+                            <option value="">-- Specify New Goal --</option>
+                            {this.getGoals().map((g, i) => (
+                                <option key={i} value={g}>{g}</option>
+                            ))}
+                        </Input>
+                    </Col>
+                    {this.createDescriptionButton("gqm_goal", "goalDescriptionButton")}
+                </FormGroup>),
+
+                this.createDescriptionRow((
+                    <div style={{"marginBottom": "1em"}}>
+                        You can select Goal and Question categories of GQM model or create new ones.
+                    </div>), "gqm_goal", "goalDescription"),
+            ];
+
+            if (!this.state.gqmGoal) {
+                formInputs.push([
+                    (<FormGroup row key="gqm_goal_new" className="animated fadeIn">
+                        <Label for="gqm_goal_new" sm={3}>New Goal <span className="text-danger">*</span></Label>
+                        <Col sm={8}>
+                            <Input type="text" name="gqm_goal" id="gqm_goal_new" required/>
+                        </Col>
+                    </FormGroup>),
+
+                    (<FormGroup row key="gqm_question_new" className="animated fadeIn">
+                        <Label for="gqm_question_new" sm={3}>New Question <span className="text-danger">*</span></Label>
+                        <Col sm={8}>
+                            <Input type="text" name="gqm_question" id="gqm_question_new" required/>
+                        </Col>
+                    </FormGroup>),
+                ]);
+            }
+
+            if (this.state.gqmQuestions !== null) {
+                formInputs.push(
+                    (<FormGroup row key="gqm_question" className="animated fadeIn">
+                        <Label for="gqm_question" sm={3}>Question</Label>
+                        <Col sm={8}>
+                            <Input type="select" name="gqm_question" id="gqm_question"
+                                   required onChange={this.changeQuestion}>
+                                <option value="">-- Specify New Question --</option>
+                                {this.state.gqmQuestions.map((q, i) => (
+                                    <option key={i} value={q}>{q}</option>
+                                ))}
+                            </Input>
+                        </Col>
+                    </FormGroup>)
+                );
+
+                if (!this.state.gqmQuestion) {
+                    formInputs.push(
+                        (<FormGroup row key="gqm_question_new" className="animated fadeIn">
+                            <Label for="gqm_question_new" sm={3}>
+                                New Question <span className="text-danger">*</span>
+                            </Label>
+                            <Col sm={8}>
+                                <Input type="text" name="gqm_question" id="gqm_question_new" required/>
+                            </Col>
+                        </FormGroup>)
+                    );
+                }
+            }
+
+            formInputs.push([
+                (<h4 key="settings">Settings</h4>),
+
                 (<FormGroup row key="metric1" className="animated fadeIn">
                     <Label for="metric1" sm={3}>Metric 1 <span className="text-danger">*</span></Label>
                     <Col sm={5}>
@@ -436,7 +544,8 @@ class NewMetricModal extends Component {
                         Main aggregation operation to combine selected metrics. Extra
                         grouping operations will be available after selecting both metrics of type <code>Raw</code>.
                     </div>), "operation", "operationDescription"),
-            ];
+            ]);
+
             if (this.state.showGroupby) {
                 let fixedGroupingType = {};
                 let fixedGroupingFunc = {};
@@ -533,7 +642,8 @@ class NewMetricModal extends Component {
                             </FormGroup>
 
                             <FormGroup row>
-                                <Label for="metricType" sm={3}>Metric type <span className="text-danger">*</span></Label>
+                                <Label for="metricType" sm={3}>Metric type <span
+                                    className="text-danger">*</span></Label>
                                 <Col sm={8}>
                                     <Input type="select" name="type" id="metricType"
                                            onChange={e => this.setState({type: e.target.value})}
@@ -553,7 +663,6 @@ class NewMetricModal extends Component {
                                     aggregated by some operation and can be represented in chart view and as tiles.
                                 </div>), "metricType", "metricTypeDescription")}
 
-                            <h4>Settings</h4>
                             {formInputs}
                         </ModalBody>
                         <ModalFooter>
