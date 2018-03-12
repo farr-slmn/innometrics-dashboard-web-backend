@@ -5,17 +5,18 @@
 }
 
 .metric-tile {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.3s ease-in-out;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.1s ease-in-out, border 0.1s;
 }
 
 .metric-tile:hover {
-  transform: scale(1.1);
-  min-width: 150px;
-  position: absolute;
-  z-index: 1000;
+  //transform: scale(1.1);
+  //min-width: 150px;
+  //position: absolute;
+  //z-index: 1000;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   margin: 0 auto;
+  border: 2px solid white;
 }
 
 //.metric-tile-trend {
