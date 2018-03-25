@@ -17,7 +17,7 @@ class Installation extends Component {
             agentMac: "/downloadables/InnoMetrics_mac.dmg",
             agentLin: "/downloadables/InnoMetrics_linux.bz2.run",
             agentJB: "/downloadables/Innometrics-JB-plugin.zip",
-            agentVS: "#",
+            agentVS: "/downloadables/InnometricsVSTracker.vsix",
         };
     }
 
@@ -71,7 +71,7 @@ class Installation extends Component {
                         </Button>
                     </Col>
                     <Col>
-                        <Button outline color="secondary" disabled
+                        <Button outline color="secondary"
                                 active={this.state.activeTab === 'VS_plugin'}
                                 onClick={this.toggle.bind(this, 'VS_plugin')}>
                             <span className="os">VS</span>
@@ -375,6 +375,30 @@ class Installation extends Component {
                                 <li> Enter login and password for InnoMetrics system</li>
                                 <li> Enter InnoMetrics system url location</li>
                                 <li> Click OK to save and go to sending activities conformation dialog.</li>
+                            </ul>
+                        </p>
+                    </TabPane>
+
+                    <TabPane tabId="VS_plugin" className="animated fadeIn">
+                        <h2>Visual Studio Extension: 2015, 2017</h2>
+                        <p>
+                            Installation:
+                            <ul>
+                                <li> Download extension archive: <a href={this.links.agentVS}
+                                                                 download>InnometricsVSTracker.vsix</a>
+                                </li>
+                                <li> Run it</li>
+                                <li> Select your IDE version</li>
+                            </ul>
+                        </p>
+                        <p>
+                            Sending measurements & Settings:
+                            <ul>
+                                <li> Open Visual Studio application</li>
+                                <li> Go to <code>Innometrics -> Settings</code></li>
+                                <li> Enter login and password for InnoMetrics system</li>
+                                <li> Enter InnoMetrics system url location</li>
+                                <li> Click OK</li>
                             </ul>
                         </p>
                     </TabPane>

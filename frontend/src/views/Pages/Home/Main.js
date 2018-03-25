@@ -10,7 +10,7 @@ class Main extends Component {
             agentMac: "/downloadables/InnoMetrics_mac.dmg",
             agentLin: "/downloadables/InnoMetrics_linux.bz2.run",
             agentJB: "/downloadables/Innometrics-JB-plugin.zip",
-            agentVS: "#",
+            agentVS: "/downloadables/InnometricsVSTracker.vsix",
         };
 
         this.routes = {
@@ -91,8 +91,8 @@ class Main extends Component {
                                 <div>
                                     <h3>Download for Visual Studio</h3>
                                 </div>
-                                <Button href={this.links.agentVS} color="success" disabled>
-                                    <span className="icon-arrow-down-circle"/> Available soon
+                                <Button href={this.links.agentVS} color="success">
+                                    <span className="icon-arrow-down-circle"/> Download
                                 </Button>
                             </Col>
                         </Row>
