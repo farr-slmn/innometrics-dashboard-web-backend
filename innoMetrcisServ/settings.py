@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'webpack_loader',
     'dash',
     'dash.contrib.layouts.android',
     'dash.contrib.layouts.bootstrap2',
@@ -115,7 +116,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
@@ -139,6 +139,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': '',
+        'STATS_FILE': os.path.join(BASE_DIR, 'frontend/webpack-stats.json'),
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -157,12 +163,15 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'staticfiles'),  # project-wide static files
+    os.path.join(BASE_DIR, 'frontend/build'),
 )
 STATIC_ROOT = './static/'
 STATIC_URL = '/static/'
 
 
-LOGIN_REDIRECT_URL = '/activities/'
+LOGIN_URL = '/#/login'
+LOGIN_REDIRECT_URL = '/#/dashboard'
+LOGOUT_REDIRECT_URL = '/'
 
 # Uncomment when deploying in heroku
 # import dj_database_url

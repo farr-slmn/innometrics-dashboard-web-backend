@@ -11,10 +11,20 @@ class Group(models.Model):
     name = models.TextField(max_length=150, blank=True)
     participation = models.ForeignKey(UserParticipation, blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Entity(models.Model):
     name = models.TextField(max_length=120, blank=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Entity'
+        verbose_name_plural = 'Entities'
+
+    def __str__(self):
+        return self.name
 
 
 class Activity(models.Model):

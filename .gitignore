@@ -96,4 +96,6 @@ ENV/
 # vim swap files
 *.swp
 
+\.idea/
+
 .idea/
