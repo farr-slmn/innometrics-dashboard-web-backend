@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import {
     Badge,
-    Button,
     Dropdown,
     DropdownItem,
     DropdownMenu,
@@ -9,7 +8,6 @@ import {
     Navbar,
     NavbarBrand,
     NavbarToggler,
-    NavItem,
 } from 'reactstrap';
 
 class Header extends Component {
@@ -57,16 +55,6 @@ class Header extends Component {
         <NavbarToggler className="d-md-down-none mr-auto" onClick={this.sidebarToggle}>
           <span className="icon-menu"/>
         </NavbarToggler>
-        <NavItem>
-          <Button color="warning" className="pr-4 mr-2">
-            Warnings <Badge color="light" className="mr-2">3</Badge>
-          </Button>
-        </NavItem>
-        <NavItem>
-          <Button outline color="danger" className="pr-4">
-            Critical <Badge color="light">0</Badge>
-          </Button>
-        </NavItem>
         <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
           <DropdownToggle nav caret>
             <img src={'/static/img/avatars/default.jpg'} className="img-avatar" alt={window.user_email}/>
