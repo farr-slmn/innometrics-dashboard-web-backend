@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from inspect import getargspec
 from django.core.serializers.json import DjangoJSONEncoder
 import json as simplejson

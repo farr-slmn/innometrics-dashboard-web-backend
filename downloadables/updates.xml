@@ -1,0 +1,3 @@
+<plugins>
+    <plugin id="ru.innopolis.university.innometrics.jb_plugin" url="./Innometrics-JB-plugin.jar" version="0.3"/>
+</plugins>

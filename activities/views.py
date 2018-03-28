@@ -1,4 +1,5 @@
 import os
+import re
 
 from django.contrib.auth.models import User
 from django.shortcuts import render
@@ -18,10 +19,16 @@ class DownloadList(APIView):
 
     def get(self, request, path=None, format=None):
         if not path:
-            return render(
-                request,
-                'activities/installer.html'
-            )
+            if re.match('.*(PyCharm|IntelliJ IDEA).*', request.META['HTTP_USER_AGENT']):
+                return render(
+                    request,
+                    'downloadables/updates.xml'
+                )
+            else:
+                return render(
+                    request,
+                    'activities/installer.html'
+                )
         else:
             file_path = os.path.join('downloadables/', path)
             if os.path.exists(file_path):
