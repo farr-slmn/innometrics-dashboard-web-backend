@@ -20,10 +20,14 @@ class DownloadList(APIView):
     def get(self, request, path=None, format=None):
         if not path:
             if re.match('.*(PyCharm|IntelliJ IDEA).*', request.META['HTTP_USER_AGENT']):
-                return render(
-                    request,
-                    'downloadables/updates.xml'
-                )
+                file_path = 'downloadables/updates.xml'
+                if os.path.exists(file_path):
+                    with open(file_path, 'rb') as fh:
+                        response = HttpResponse(fh.read(), content_type="application/xml")
+                        response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+                        return response
+                else:
+                    return Http404()
             else:
                 return render(
                     request,
